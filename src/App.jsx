@@ -5,10 +5,7 @@ import {
   MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS,
 } from "./constants.js";
 import { AgreementPanel } from "./components/AgreementPanel.jsx";
-<<<<<<< HEAD
 import { BrandLogos } from "./components/BrandLogos.jsx";
-=======
->>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
 import { SearchPanel } from "./components/SearchPanel.jsx";
 import { calculateAgreement } from "./lib/agreementCalculator.js";
 import {
