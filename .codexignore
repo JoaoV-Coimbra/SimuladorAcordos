@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.vite
+.git
+.env
+.env.local
+coverage
