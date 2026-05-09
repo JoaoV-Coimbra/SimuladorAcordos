@@ -5,7 +5,10 @@ import {
   MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS,
 } from "./constants.js";
 import { AgreementPanel } from "./components/AgreementPanel.jsx";
+<<<<<<< HEAD
 import { BrandLogos } from "./components/BrandLogos.jsx";
+=======
+>>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
 import { SearchPanel } from "./components/SearchPanel.jsx";
 import { calculateAgreement } from "./lib/agreementCalculator.js";
 import {
@@ -129,11 +132,14 @@ export function App() {
     setInstallmentCount(Math.max(1, parsedValue));
   }
 
+<<<<<<< HEAD
   // Abre a impressao do navegador com o layout preparado para salvar o acordo em PDF.
   function handleExportPdf() {
     window.print();
   }
 
+=======
+>>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -142,7 +148,11 @@ export function App() {
           <h1>Calculadora de Acordo por PDF</h1>
         </div>
         <div className="topbar__meta">
+<<<<<<< HEAD
           <BrandLogos />
+=======
+          <span>React + Vite</span>
+>>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
           <strong>Leitura automatica de debitos</strong>
         </div>
       </header>
@@ -169,7 +179,10 @@ export function App() {
           selectedAssets={selectedAssets}
           simulation={simulation}
           searchDescription={searchDescription}
+<<<<<<< HEAD
           onExportPdf={handleExportPdf}
+=======
+>>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
           onFirstInstallmentDateChange={(value) => {
             setFirstInstallmentDate(
               normalizeFirstInstallmentDate(value, minimumFirstInstallmentDate),
