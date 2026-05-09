@@ -55,6 +55,13 @@ export function SearchPanel({
         </div>
       )}
 
+      {reportMetadata?.parserSummary?.skippedLines > 0 && (
+        <div className="parser-warning">
+          {reportMetadata.parserSummary.skippedLines} linha(s) do PDF nao puderam ser
+          interpretadas automaticamente. Revise os ativos carregados antes de exportar.
+        </div>
+      )}
+
       {!hasAssets && <div className="empty-state">{statusMessage}</div>}
 
       {hasAssets && (

@@ -14,7 +14,7 @@ import {
   normalizeFirstInstallmentDate,
   parseInputDate,
 } from "./lib/dates.js";
-import { sumCurrency } from "./lib/money.js";
+import { roundCurrency, sumCurrency } from "./lib/money.js";
 
 // Coordena o fluxo principal da tela: upload do PDF, selecao de ativos e simulacao do acordo.
 export function App() {
@@ -38,12 +38,27 @@ export function App() {
   );
   const [installmentCount, setInstallmentCount] =
     useState(DEFAULT_INSTALLMENTS);
+  const [hasDownPayment, setHasDownPayment] = useState(false);
+  const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
   const [note, setNote] = useState("");
 
   const selectedAssets = assets.filter((asset) =>
     selectedAssetIds.has(asset.id),
   );
   const totalDebt = sumCurrency(selectedAssets, (asset) => asset.amount);
+  const normalizedDownPaymentAmount = hasDownPayment
+    ? roundCurrency(
+        Math.min(
+          Math.max(
+            Number.parseFloat(
+              String(downPaymentAmount).replace(",", "."),
+            ) || 0,
+            0,
+          ),
+          totalDebt,
+        ),
+      )
+    : 0;
   const normalizedFirstInstallmentDate = normalizeFirstInstallmentDate(
     firstInstallmentDate,
     minimumFirstInstallmentDate,
@@ -52,6 +67,7 @@ export function App() {
   const simulation = selectedAssets.length
     ? calculateAgreement({
         totalDebt,
+        downPayment: normalizedDownPaymentAmount,
         monthlyRatePercent: FIXED_MONTHLY_RATE_PERCENT,
         installmentCount,
         agreementDate,
@@ -83,9 +99,11 @@ export function App() {
         new Set(parsedReport.assets.map((asset) => asset.id)),
       );
       setReportMetadata(parsedReport.metadata);
+      setHasDownPayment(false);
+      setDownPaymentAmount("0.00");
       setStatusMessage(
         parsedReport.assets.length
-          ? ""
+          ? buildSuccessMessage(parsedReport)
           : "Nenhum ativo encontrado no PDF enviado.",
       );
     } catch (error) {
@@ -129,6 +147,16 @@ export function App() {
     setInstallmentCount(Math.max(1, parsedValue));
   }
 
+  // Ativa ou remove a entrada inicial mantendo o valor digitado para cenarios alternativos.
+  function handleDownPaymentToggle(checked) {
+    setHasDownPayment(checked);
+  }
+
+  // Mantem o valor digitado em formato simples para o campo numerico da entrada.
+  function handleDownPaymentAmountChange(value) {
+    setDownPaymentAmount(value);
+  }
+
   // Abre a impressao do navegador com o layout preparado para salvar o acordo em PDF.
   function handleExportPdf() {
     window.print();
@@ -166,12 +194,16 @@ export function App() {
           installmentCount={installmentCount}
           monthlyRatePercent={FIXED_MONTHLY_RATE_PERCENT}
           note={note}
+          hasDownPayment={hasDownPayment}
+          downPaymentAmount={downPaymentAmount}
           selectedAssets={selectedAssets}
           simulation={simulation}
           searchDescription={searchDescription}
           onExportPdf={handleExportPdf}
           onFirstInstallmentDateChange={setFirstInstallmentDate}
           onInstallmentCountChange={handleInstallmentCountChange}
+          onDownPaymentToggle={handleDownPaymentToggle}
+          onDownPaymentAmountChange={handleDownPaymentAmountChange}
           onNoteChange={setNote}
         />
       </div>
@@ -197,4 +229,16 @@ function buildSourceDescription(reportMetadata, uploadedFileName) {
   }
 
   return descriptionParts.join(" - ");
+}
+
+// Resume a leitura destacando quando o parser precisou descartar linhas da tabela.
+function buildSuccessMessage(parsedReport) {
+  const assetCount = parsedReport.assets.length;
+  const skippedCount = parsedReport.metadata?.parserSummary?.skippedLines ?? 0;
+
+  if (!skippedCount) {
+    return `${assetCount} ativo(s) carregado(s) para simulacao.`;
+  }
+
+  return `${assetCount} ativo(s) carregado(s); ${skippedCount} linha(s) do PDF nao puderam ser interpretadas automaticamente.`;
 }

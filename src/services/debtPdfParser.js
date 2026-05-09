@@ -16,9 +16,11 @@ export async function parseDebtSpreadsheetPdf(file) {
     lines.push(...pageLines);
   }
 
+  const assetExtraction = extractAssets(lines);
+
   return {
-    metadata: extractReportMetadata(lines),
-    assets: extractAssets(lines)
+    metadata: extractReportMetadata(lines, assetExtraction),
+    assets: assetExtraction.assets
   };
 }
 
@@ -68,31 +70,44 @@ function groupTextItemsIntoLines(items) {
 }
 
 // Extrai os dados de contexto do cabecalho, como condominio, unidade e total do relatorio.
-function extractReportMetadata(lines) {
+function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
   const metadata = {
     condominium: "",
     unit: "",
-    totalDebt: ""
+    totalDebt: "",
+    parserSummary: {
+      skippedLines: assetExtraction.skippedLines.length
+    }
   };
-  const fullText = lines.join(" ");
+  const rawFullText = lines.join(" ");
+  const normalizedFullText = normalizeSearchText(rawFullText);
 
-  const condominiumMatch = fullText.match(/CONDOM.NIO:\s*(.*?)\s+DATA ATUALIZA/i);
-  if (condominiumMatch) {
-    metadata.condominium = condominiumMatch[1].trim();
-  }
+  const rawCondominiumMatch = rawFullText.match(/CONDOM.NIO:\s*(.*?)\s+DATA ATUALIZA/i);
+  const normalizedCondominiumMatch = normalizedFullText.match(
+    /CONDOMINIO:\s*(.*?)\s+DATA ATUALIZA/i,
+  );
+  metadata.condominium = rawCondominiumMatch?.[1]?.trim()
+    || normalizedCondominiumMatch?.[1]?.trim()
+    || "";
 
-  const totalMatch = fullText.match(/TOTAL DO D.BITO:\s*([\d.,]+)/i);
-  if (totalMatch) {
-    metadata.totalDebt = totalMatch[1].trim();
-  }
+  const rawTotalMatch = rawFullText.match(/TOTAL DO D.BITO:\s*([\d.,]+)/i);
+  const normalizedTotalMatch = normalizedFullText.match(
+    /TOTAL DO DEBITO:\s*([\d.,]+)/i,
+  );
+  metadata.totalDebt = rawTotalMatch?.[1]?.trim()
+    || normalizedTotalMatch?.[1]?.trim()
+    || "";
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    if (!line.startsWith("UNIDADE:")) {
+    const normalizedLine = normalizeSearchText(line);
+    if (!normalizedLine.startsWith("UNIDADE:")) {
       continue;
     }
 
-    const unitInlineMatch = line.match(/UNIDADE:\s*(.*?)\s+COD ERP:/i);
+    const unitInlineMatch =
+      line.match(/UNIDADE:\s*(.*?)\s+COD ERP:/i)
+      || normalizedLine.match(/UNIDADE:\s*(.*?)\s+COD ERP:/i);
     if (unitInlineMatch && unitInlineMatch[1].trim()) {
       metadata.unit = unitInlineMatch[1].trim();
       break;
@@ -110,34 +125,71 @@ function extractReportMetadata(lines) {
 
 // Percorre as linhas de debito e monta a lista de ativos com ID, vencimento e valor atualizado.
 function extractAssets(lines) {
-  return lines
-    .filter((line) => /^\d{2}\/\d{2}\/\d{4}\s+[\d.]+/.test(line))
-    .map((line) => parseAssetLine(line))
-    .filter(Boolean);
+  const assets = [];
+  const skippedLines = [];
+
+  for (const line of lines) {
+    if (!looksLikeAssetLine(line)) {
+      continue;
+    }
+
+    const parsedAsset = parseAssetLine(line);
+    if (parsedAsset) {
+      assets.push(parsedAsset);
+      continue;
+    }
+
+    skippedLines.push(line);
+  }
+
+  return {
+    assets,
+    skippedLines
+  };
 }
 
 // Interpreta uma linha individual da tabela do PDF usando o ID como ativo e o Vlr Atualizado como valor devido.
 function parseAssetLine(line) {
-  const tokens = line.split(/\s+/);
-  if (tokens.length < 9) {
+  const normalizedLine = line.replace(/\s+/g, " ").trim();
+  const leadMatch = normalizedLine.match(
+    /^(?<dueDate>\d{2}\/\d{2}\/\d{4})\s+(?<assetId>[A-Z0-9./-]+)\s+(?<rest>.+)$/i,
+  );
+
+  if (!leadMatch?.groups) {
     return null;
   }
 
-  const dueDate = convertPdfDateToInput(tokens[0]);
-  const assetId = tokens[1];
-  const monetaryValues = tokens.slice(-6);
-  const descriptionTokens = tokens.slice(2, -6);
+  const { dueDate: dueDateToken, assetId, rest } = leadMatch.groups;
+  const dueDate = convertPdfDateToInput(dueDateToken);
+  const currencyMatches = Array.from(
+    rest.matchAll(/-?\d[\d.]*,\d{2}/g),
+  );
 
-  if (!dueDate || !descriptionTokens.length || monetaryValues.length < 6) {
+  if (!dueDate || currencyMatches.length < 2) {
+    return null;
+  }
+
+  const firstMoneyIndex = currencyMatches[0].index ?? -1;
+  if (firstMoneyIndex <= 0) {
+    return null;
+  }
+
+  const description = rest.slice(0, firstMoneyIndex).replace(/\s+/g, " ").trim();
+  const amountToken =
+    currencyMatches.at(-2)?.[0] ??
+    currencyMatches.at(-1)?.[0] ??
+    "";
+
+  if (!description || !amountToken) {
     return null;
   }
 
   return {
     id: assetId,
-    name: descriptionTokens.join(" "),
-    reference: tokens[0],
+    name: description,
+    reference: dueDateToken,
     dueDate,
-    amount: parseBrazilianNumber(monetaryValues[4])
+    amount: parseBrazilianNumber(amountToken)
   };
 }
 
@@ -155,4 +207,24 @@ function convertPdfDateToInput(value) {
 // Converte valores monetarios brasileiros com virgula decimal para numero JavaScript.
 function parseBrazilianNumber(value) {
   return Number.parseFloat(value.replace(/\./g, "").replace(",", "."));
+}
+
+// Remove variacoes de acento e caracteres especiais para tornar as buscas do cabecalho mais tolerantes.
+function normalizeSearchText(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Identifica linhas com a estrutura geral da tabela de debitos, mesmo com pequenas variacoes no layout.
+function looksLikeAssetLine(line) {
+  const normalizedLine = line.replace(/\s+/g, " ").trim();
+  if (!/^\d{2}\/\d{2}\/\d{4}\s+/.test(normalizedLine)) {
+    return false;
+  }
+
+  const currencyMatches = normalizedLine.match(/-?\d[\d.]*,\d{2}/g) ?? [];
+  return currencyMatches.length >= 2;
 }

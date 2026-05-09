@@ -174,6 +174,10 @@ select {
   gap: 6px;
 }
 
+.field--checkbox {
+  align-content: end;
+}
+
 .field span {
   color: var(--muted);
   font-size: 0.84rem;
@@ -205,6 +209,22 @@ select {
 .field input:disabled {
   background: var(--surface-muted);
   color: #475467;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 2px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
 }
 
 .field--grow {
@@ -269,6 +289,16 @@ select {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-muted);
+}
+
+.parser-warning {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #e8c07d;
+  border-radius: var(--radius);
+  background: #fff7ea;
+  color: var(--warning);
+  font-size: 0.88rem;
 }
 
 .button {
@@ -416,6 +446,11 @@ tbody tr.selected {
   white-space: nowrap;
 }
 
+.proposal__badge--secondary {
+  color: var(--primary-strong);
+  background: rgba(29, 95, 143, 0.1);
+}
+
 .proposal__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -423,7 +458,7 @@ tbody tr.selected {
 }
 
 .proposal__grid--headline {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .result-card {
@@ -618,6 +653,15 @@ tbody tr.selected {
   margin-bottom: 12px;
 }
 
+.proposal-print-summary__content p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.proposal-print-summary__content p + p {
+  margin-top: 10px;
+}
+
 .proposal-schedule__header h4 {
   margin: 0;
   font-size: 1rem;
@@ -762,6 +806,10 @@ tbody tr.selected {
     display: none !important;
   }
 
+  .agreement-form {
+    display: none !important;
+  }
+
   .panel--proposal {
     display: block !important;
   }
@@ -776,9 +824,22 @@ tbody tr.selected {
     break-inside: avoid;
   }
 
+  .proposal__hero {
+    border-width: 1.5px;
+  }
+
   .proposal__badge {
     border: 1px solid #cfd7e3;
     background: #ffffff;
+  }
+
+  .proposal-print-summary {
+    border: 1px solid #cfd7e3;
+    background: #ffffff;
+  }
+
+  .selected-assets-list {
+    grid-template-columns: 1fr;
   }
 
   .table-wrap {

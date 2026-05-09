@@ -5,12 +5,19 @@ import { roundCurrency } from "./money.js";
 // Aplica a regra financeira do acordo pre-fixado com correcao pro rata e parcela Price.
 export function calculateAgreement({
   totalDebt,
+  downPayment = 0,
   monthlyRatePercent,
   installmentCount,
   agreementDate,
   firstInstallmentDate,
 }) {
-  const financedBalance = roundCurrency(Math.max(totalDebt, 0));
+  const normalizedTotalDebt = roundCurrency(Math.max(totalDebt, 0));
+  const normalizedDownPayment = roundCurrency(
+    Math.min(Math.max(downPayment, 0), normalizedTotalDebt),
+  );
+  const financedBalance = roundCurrency(
+    Math.max(normalizedTotalDebt - normalizedDownPayment, 0),
+  );
   const monthlyRate = monthlyRatePercent / 100;
   const prorataDays = Math.max(dateDiffInDays(agreementDate, firstInstallmentDate), 0);
   const dailyRate = monthlyRate / 30;
@@ -35,14 +42,18 @@ export function calculateAgreement({
     installmentAmountExact,
   });
   const totalPaid = roundCurrency(
-    schedule.reduce((total, installment) => total + installment.installmentAmount, 0),
+    normalizedDownPayment +
+      schedule.reduce((total, installment) => total + installment.installmentAmount, 0),
   );
-  const totalInterest = roundCurrency(totalPaid - financedBalance);
-  const interestPercent = financedBalance > 0 ? (totalInterest / financedBalance) * 100 : 0;
-  const effectiveCostPercent = financedBalance > 0 ? (totalInterest / financedBalance) * 100 : 0;
+  const financedInterest = roundCurrency(
+    totalPaid - normalizedDownPayment - financedBalance,
+  );
+  const totalInterest = roundCurrency(totalPaid - normalizedTotalDebt);
+  const interestPercent = financedBalance > 0 ? (financedInterest / financedBalance) * 100 : 0;
 
   return {
-    totalDebt,
+    totalDebt: normalizedTotalDebt,
+    downPayment: normalizedDownPayment,
     financedBalance,
     monthlyRatePercent,
     installmentCount,
@@ -54,8 +65,8 @@ export function calculateAgreement({
     installmentAmount,
     schedule,
     totalPaid,
+    financedInterest,
     totalInterest,
     interestPercent,
-    effectiveCostPercent,
   };
 }

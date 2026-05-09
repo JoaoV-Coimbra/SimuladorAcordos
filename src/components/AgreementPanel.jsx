@@ -8,12 +8,16 @@ export function AgreementPanel({
   installmentCount,
   monthlyRatePercent,
   note,
+  hasDownPayment,
+  downPaymentAmount,
   selectedAssets,
   simulation,
   searchDescription,
   onExportPdf,
   onFirstInstallmentDateChange,
   onInstallmentCountChange,
+  onDownPaymentToggle,
+  onDownPaymentAmountChange,
   onNoteChange,
 }) {
   return (
@@ -69,6 +73,30 @@ export function AgreementPanel({
             />
           </label>
 
+          <div className="field field--checkbox">
+            <span>Entrada opcional</span>
+            <label className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={hasDownPayment}
+                onChange={(event) => onDownPaymentToggle(event.target.checked)}
+              />
+              <span>Usar entrada no acordo</span>
+            </label>
+          </div>
+
+          <label className="field">
+            <span>Valor da entrada</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={downPaymentAmount}
+              onChange={(event) => onDownPaymentAmountChange(event.target.value)}
+              disabled={!hasDownPayment}
+            />
+          </label>
+
           <label className="field">
             <span>Observacao comercial</span>
             <input
@@ -96,12 +124,18 @@ export function AgreementPanel({
             </div>
             <div className="proposal__hero-meta">
               <div className="proposal__badge">Calculo automatico</div>
+              {simulation.downPayment > 0 && (
+                <div className="proposal__badge proposal__badge--secondary">
+                  Entrada de {formatCurrency(simulation.downPayment)}
+                </div>
+              )}
               <strong>{simulation.installmentCount} parcelas fixas</strong>
             </div>
           </div>
 
           <div className="proposal__grid proposal__grid--headline">
             <ResultCard label="Divida total" value={formatCurrency(simulation.totalDebt)} highlight />
+            <ResultCard label="Entrada" value={formatCurrency(simulation.downPayment)} />
             <ResultCard label="Saldo parcelado" value={formatCurrency(simulation.financedBalance)} />
             <ResultCard label="Parcela (Price)" value={formatCurrency(simulation.installmentAmount)} />
             <ResultCard label="Taxa a.m." value={`${formatPercent(simulation.monthlyRatePercent)}%`} />
@@ -118,11 +152,12 @@ export function AgreementPanel({
                 <InfoPill label="1a parcela" value={formatDate(simulation.firstInstallmentDate)} />
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
                 <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
+                <InfoPill label="Entrada" value={formatCurrency(simulation.downPayment)} />
                 <InfoPill label="Saldo corrigido" value={formatCurrency(simulation.correctedBalance)} />
                 <InfoPill label="Total pago" value={formatCurrency(simulation.totalPaid)} />
-                <InfoPill label="Total de juros" value={formatCurrency(simulation.totalInterest)} />
-                <InfoPill label="% de juros" value={`${formatPercent(simulation.interestPercent)}%`} />
-                <InfoPill label="CET estimado" value={`${formatPercent(simulation.effectiveCostPercent)}%`} />
+                <InfoPill label="Juros do parcelamento" value={formatCurrency(simulation.financedInterest)} />
+                <InfoPill label="Juros sobre saldo" value={`${formatPercent(simulation.interestPercent)}%`} />
+                <InfoPill label="Diferenca vs. divida" value={formatCurrency(simulation.totalInterest)} />
               </div>
             </section>
 
@@ -145,6 +180,27 @@ export function AgreementPanel({
               </div>
             </aside>
           </div>
+
+          <section className="proposal-print-summary info-card">
+            <div className="info-card__header">
+              <h4>Condicoes da semi-proposta</h4>
+              <p>Resumo pronto para exportacao em PDF ou impressao.</p>
+            </div>
+            <div className="proposal-print-summary__content">
+              <p>
+                Divida consolidada em {formatCurrency(simulation.totalDebt)}, com
+                {simulation.downPayment > 0
+                  ? ` entrada de ${formatCurrency(simulation.downPayment)} e`
+                  : ""}{" "}
+                saldo parcelado em {simulation.installmentCount} parcela(s) fixas de{" "}
+                {formatCurrency(simulation.installmentAmount)}.
+              </p>
+              <p>
+                Primeira parcela prevista para {formatDate(simulation.firstInstallmentDate)}.
+                Total estimado do acordo: {formatCurrency(simulation.totalPaid)}.
+              </p>
+            </div>
+          </section>
 
           <div className="proposal-schedule">
             <div className="proposal-schedule__header">
