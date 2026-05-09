@@ -1,8 +1,5 @@
 import { dateDiffInDays } from "./dates.js";
-<<<<<<< HEAD
 import { buildInstallmentSchedule } from "./installments.js";
-=======
->>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
 import { roundCurrency } from "./money.js";
 
 // Aplica a regra financeira do acordo pre-fixado com correcao pro rata e parcela Price.
@@ -11,7 +8,7 @@ export function calculateAgreement({
   monthlyRatePercent,
   installmentCount,
   agreementDate,
-  firstInstallmentDate
+  firstInstallmentDate,
 }) {
   const financedBalance = roundCurrency(Math.max(totalDebt, 0));
   const monthlyRate = monthlyRatePercent / 100;
@@ -30,7 +27,6 @@ export function calculateAgreement({
   }
 
   const installmentAmount = roundCurrency(installmentAmountExact);
-<<<<<<< HEAD
   const schedule = buildInstallmentSchedule({
     correctedBalance,
     monthlyRate,
@@ -41,9 +37,6 @@ export function calculateAgreement({
   const totalPaid = roundCurrency(
     schedule.reduce((total, installment) => total + installment.installmentAmount, 0),
   );
-=======
-  const totalPaid = roundCurrency(installmentAmountExact * installmentCount);
->>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
   const totalInterest = roundCurrency(totalPaid - financedBalance);
   const interestPercent = financedBalance > 0 ? (totalInterest / financedBalance) * 100 : 0;
   const effectiveCostPercent = financedBalance > 0 ? (totalInterest / financedBalance) * 100 : 0;
@@ -59,13 +52,10 @@ export function calculateAgreement({
     dailyRatePercent: dailyRate * 100,
     correctedBalance,
     installmentAmount,
-<<<<<<< HEAD
     schedule,
-=======
->>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
     totalPaid,
     totalInterest,
     interestPercent,
-    effectiveCostPercent
+    effectiveCostPercent,
   };
 }

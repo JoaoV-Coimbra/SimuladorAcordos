@@ -43,7 +43,6 @@ export function dateDiffInDays(startDate, endDate) {
   return Math.round((end.getTime() - start.getTime()) / 86400000);
 }
 
-<<<<<<< HEAD
 // Avanca meses mantendo o padrao YYYY-MM-DD para montar a agenda de parcelas.
 export function addMonthsToInputDate(value, monthsToAdd) {
   const date = parseInputDate(value);
@@ -56,8 +55,6 @@ export function addMonthsToInputDate(value, monthsToAdd) {
   return formatDateForInput(next);
 }
 
-=======
->>>>>>> ab550870fd549ed22a3618a73191a427c65de7da
 // Ajusta a data da primeira parcela para nunca ficar antes do minimo permitido pela regra.
 export function normalizeFirstInstallmentDate(selectedDate, minimumDate) {
   if (!selectedDate || selectedDate < minimumDate) {
