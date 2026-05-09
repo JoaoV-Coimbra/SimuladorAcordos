@@ -98,11 +98,11 @@ export function SearchPanel({
                           type="checkbox"
                           checked={checked}
                           onChange={() => onToggleAsset(asset.id)}
-                          aria-label={`Selecionar ${asset.name}`}
+                          aria-label={`Selecionar ${asset.id}`}
                         />
                       </td>
                       <td>{asset.id}</td>
-                      <td>{asset.name}</td>
+                      <td>{asset.id}</td>
                       <td>{asset.reference}</td>
                       <td>{formatDate(asset.dueDate)}</td>
                       <td>{formatCurrency(asset.amount)}</td>

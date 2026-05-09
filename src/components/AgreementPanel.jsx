@@ -169,8 +169,10 @@ export function AgreementPanel({
               <ul className="selected-assets-list">
                 {selectedAssets.map((asset) => (
                   <li key={asset.id}>
-                    <strong>{asset.name}</strong>
-                    <span>{asset.reference} - venc. {formatDate(asset.dueDate)} - {formatCurrency(asset.amount)}</span>
+                    <span className="selected-assets-list__label">Ativo</span>
+                    <strong>{asset.id}</strong>
+                    <span className="selected-assets-list__label">Dt.Vencimento</span>
+                    <span>{formatDate(asset.dueDate)}</span>
                   </li>
                 ))}
               </ul>
