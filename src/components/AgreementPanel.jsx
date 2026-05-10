@@ -6,6 +6,7 @@ export function AgreementPanel({
   firstInstallmentDate,
   minimumFirstInstallmentDate,
   installmentCount,
+  installmentCountInput,
   monthlyRatePercent,
   note,
   hasDownPayment,
@@ -16,6 +17,7 @@ export function AgreementPanel({
   onExportPdf,
   onFirstInstallmentDateChange,
   onInstallmentCountChange,
+  onInstallmentCountBlur,
   onDownPaymentToggle,
   onDownPaymentAmountChange,
   onNoteChange,
@@ -68,8 +70,9 @@ export function AgreementPanel({
               type="number"
               min="1"
               step="1"
-              value={installmentCount}
+              value={installmentCountInput}
               onChange={(event) => onInstallmentCountChange(event.target.value)}
+              onBlur={onInstallmentCountBlur}
             />
           </label>
 

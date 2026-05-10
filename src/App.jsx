@@ -36,11 +36,13 @@ export function App() {
   const [firstInstallmentDate, setFirstInstallmentDate] = useState(
     minimumFirstInstallmentDate,
   );
-  const [installmentCount, setInstallmentCount] =
-    useState(DEFAULT_INSTALLMENTS);
+  const [installmentCountInput, setInstallmentCountInput] = useState(
+    String(DEFAULT_INSTALLMENTS),
+  );
   const [hasDownPayment, setHasDownPayment] = useState(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
   const [note, setNote] = useState("");
+  const installmentCount = normalizeInstallmentCount(installmentCountInput);
 
   const selectedAssets = assets.filter((asset) =>
     selectedAssetIds.has(asset.id),
@@ -141,10 +143,15 @@ export function App() {
     });
   }
 
-  // Garante que o numero de parcelas sempre seja inteiro e no minimo 1.
+  // Permite apagar e reescrever o campo sem travar a digitacao em torno do valor minimo.
   function handleInstallmentCountChange(value) {
-    const parsedValue = Number.parseInt(value || "1", 10);
-    setInstallmentCount(Math.max(1, parsedValue));
+    const digitsOnlyValue = value.replace(/\D/g, "");
+    setInstallmentCountInput(digitsOnlyValue);
+  }
+
+  // Ao sair do campo, aplica o minimo permitido para evitar deixar o formulario invalido.
+  function handleInstallmentCountBlur() {
+    setInstallmentCountInput(String(normalizeInstallmentCount(installmentCountInput)));
   }
 
   // Ativa ou remove a entrada inicial mantendo o valor digitado para cenarios alternativos.
@@ -192,6 +199,7 @@ export function App() {
           firstInstallmentDate={normalizedFirstInstallmentDate}
           minimumFirstInstallmentDate={minimumFirstInstallmentDate}
           installmentCount={installmentCount}
+          installmentCountInput={installmentCountInput}
           monthlyRatePercent={FIXED_MONTHLY_RATE_PERCENT}
           note={note}
           hasDownPayment={hasDownPayment}
@@ -202,6 +210,7 @@ export function App() {
           onExportPdf={handleExportPdf}
           onFirstInstallmentDateChange={setFirstInstallmentDate}
           onInstallmentCountChange={handleInstallmentCountChange}
+          onInstallmentCountBlur={handleInstallmentCountBlur}
           onDownPaymentToggle={handleDownPaymentToggle}
           onDownPaymentAmountChange={handleDownPaymentAmountChange}
           onNoteChange={setNote}
@@ -241,4 +250,13 @@ function buildSuccessMessage(parsedReport) {
   }
 
   return `${assetCount} ativo(s) carregado(s); ${skippedCount} linha(s) do PDF nao puderam ser interpretadas automaticamente.`;
+}
+
+function normalizeInstallmentCount(value) {
+  const parsedValue = Number.parseInt(value, 10);
+  if (Number.isNaN(parsedValue)) {
+    return 1;
+  }
+
+  return Math.max(1, parsedValue);
 }
