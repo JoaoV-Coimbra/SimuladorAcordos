@@ -1,7 +1,7 @@
 // Taxa mensal sugerida ao abrir a simulacao.
 export const DEFAULT_MONTHLY_RATE_PERCENT = 2.2;
-// Percentual inicial de honorarios advocaticios aplicado sobre a divida.
-export const DEFAULT_ATTORNEY_FEES_PERCENT = 10;
+// Valor inicial de honorarios quando ainda nao ha PDF carregado.
+export const DEFAULT_ATTORNEY_FEES_AMOUNT = 0;
 // Quantidade inicial de parcelas sugerida ao abrir a simulacao.
 export const DEFAULT_INSTALLMENTS = 15;
 // Intervalo minimo em dias uteis exigido para o vencimento da primeira parcela.

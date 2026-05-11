@@ -8,7 +8,7 @@ export function AgreementPanel({
   installmentCount,
   installmentCountInput,
   monthlyRateInput,
-  attorneyFeesInput,
+  attorneyFeesAmountInput,
   note,
   hasDownPayment,
   downPaymentAmount,
@@ -21,7 +21,7 @@ export function AgreementPanel({
   onInstallmentCountBlur,
   onMonthlyRateChange,
   onMonthlyRateBlur,
-  onAttorneyFeesChange,
+  onAttorneyFeesAmountChange,
   onAttorneyFeesBlur,
   onDownPaymentToggle,
   onDownPaymentAmountChange,
@@ -88,12 +88,12 @@ export function AgreementPanel({
           </label>
 
           <label className="field">
-            <span>Honorarios advocaticios (%)</span>
+            <span>Honorarios advocaticios (R$)</span>
             <input
               type="text"
               inputMode="decimal"
-              value={attorneyFeesInput}
-              onChange={(event) => onAttorneyFeesChange(event.target.value)}
+              value={attorneyFeesAmountInput}
+              onChange={(event) => onAttorneyFeesAmountChange(event.target.value)}
               onBlur={onAttorneyFeesBlur}
             />
           </label>
@@ -179,7 +179,6 @@ export function AgreementPanel({
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
                 <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
                 <InfoPill label="Periodo Price" value={simulation.pricePrePeriod} />
-                <InfoPill label="Honorarios" value={`${formatPercent(simulation.attorneyFeesPercent)}%`} />
                 <InfoPill label="Valor dos honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
                 <InfoPill label="Base do acordo" value={formatCurrency(simulation.agreementBaseAmount)} />
                 <InfoPill label="Entrada" value={formatCurrency(simulation.downPayment)} />

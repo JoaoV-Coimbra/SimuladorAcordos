@@ -268,23 +268,27 @@ select {
 .upload-box__meta strong,
 .report-summary strong {
   display: block;
-  overflow-wrap: anywhere;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .upload-box__meta span,
 .report-summary span {
   color: var(--muted);
   font-size: 0.84rem;
+  line-height: 1.25;
 }
 
 .report-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 10px;
   margin-bottom: 16px;
 }
 
 .report-summary > div {
+  min-width: 0;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -421,7 +425,8 @@ tbody tr.selected {
 .proposal__hero p {
   margin: 6px 0 0;
   color: var(--muted);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .proposal__hero-meta {
@@ -458,12 +463,12 @@ tbody tr.selected {
 }
 
 .proposal__grid--headline {
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
 .result-card {
   min-width: 0;
-  padding: 16px;
+  padding: 14px;
   border: 1px solid #d8e2ed;
   border-radius: 18px;
   background: linear-gradient(180deg, #fbfcfe, #f4f7fb);
@@ -479,8 +484,10 @@ tbody tr.selected {
 
 .result-card strong {
   display: block;
-  overflow-wrap: anywhere;
-  font-size: 1.35rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+  font-size: clamp(1.05rem, 1vw + 0.72rem, 1.35rem);
+  line-height: 1.18;
 }
 
 .result-card--highlight {
@@ -525,7 +532,7 @@ tbody tr.selected {
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   min-width: 0;
 }
@@ -550,8 +557,10 @@ tbody tr.selected {
 
 .info-pill strong {
   display: block;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
   font-size: 1rem;
+  line-height: 1.2;
 }
 
 .proposal__aside {
@@ -618,19 +627,21 @@ tbody tr.selected {
 }
 
 .proposal-schedule .table-wrap {
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .schedule-table {
-  table-layout: fixed;
+  min-width: 980px;
+  table-layout: auto;
 }
 
 .schedule-table th,
 .schedule-table td {
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .schedule-table th:nth-child(1),
@@ -702,18 +713,12 @@ tbody tr.selected {
     grid-template-columns: 1fr;
   }
 
-  .proposal__grid--headline {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .proposal-schedule .table-wrap {
-    overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    overflow-x: auto;
   }
 
   .schedule-table {
-    table-layout: auto;
+    min-width: 980px;
   }
 
   .schedule-table th,

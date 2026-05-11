@@ -73,8 +73,11 @@ function groupTextItemsIntoLines(items) {
 function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
   const metadata = {
     condominium: "",
+    owner: "",
+    ownerDocument: "",
     unit: "",
     totalDebt: "",
+    attorneyFeesAmount: extractAttorneyFeesAmount(lines),
     parserSummary: {
       skippedLines: assetExtraction.skippedLines.length
     }
@@ -89,6 +92,10 @@ function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
   metadata.condominium = rawCondominiumMatch?.[1]?.trim()
     || normalizedCondominiumMatch?.[1]?.trim()
     || "";
+  const ownerValue = extractInlineMetadataValue(lines, "PROPRIETARIO");
+  const ownerParts = splitOwnerDocumentAndName(ownerValue);
+  metadata.owner = ownerParts.name;
+  metadata.ownerDocument = ownerParts.document;
 
   const rawTotalMatch = rawFullText.match(/TOTAL DO D.BITO:\s*([\d.,]+)/i);
   const normalizedTotalMatch = normalizedFullText.match(
@@ -96,39 +103,40 @@ function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
   );
   metadata.totalDebt = rawTotalMatch?.[1]?.trim()
     || normalizedTotalMatch?.[1]?.trim()
+    || extractDebtSubtotalFinal(lines)
     || "";
 
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    const normalizedLine = normalizeSearchText(line);
-    if (!normalizedLine.startsWith("UNIDADE:")) {
-      continue;
-    }
-
-    const unitInlineMatch =
-      line.match(/UNIDADE:\s*(.*?)\s+COD ERP:/i)
-      || normalizedLine.match(/UNIDADE:\s*(.*?)\s+COD ERP:/i);
-    if (unitInlineMatch && unitInlineMatch[1].trim()) {
-      metadata.unit = unitInlineMatch[1].trim();
-      break;
-    }
-
-    const nextLine = lines[index + 1] ?? "";
-    if (nextLine) {
-      metadata.unit = nextLine.trim();
-      break;
-    }
-  }
+  metadata.unit = extractInlineMetadataValue(lines, "UNIDADE");
 
   return metadata;
 }
 
-// Percorre as linhas de debito e monta a lista de ativos com ID, vencimento e valor atualizado.
+// Percorre somente a secao de debitos condominiais e monta a lista com o Vlr Final de cada ativo.
 function extractAssets(lines) {
   const assets = [];
   const skippedLines = [];
+  let isDebtSection = false;
 
   for (const line of lines) {
+    const normalizedLine = normalizeSearchText(line).toUpperCase();
+    if (normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")) {
+      isDebtSection = true;
+      continue;
+    }
+
+    if (!isDebtSection) {
+      continue;
+    }
+
+    if (
+      normalizedLine.startsWith("SUB TOTAL") ||
+      normalizedLine.includes("CUSTAS PROCESSUAIS") ||
+      normalizedLine.startsWith("HONORARIOS")
+    ) {
+      isDebtSection = false;
+      continue;
+    }
+
     if (!looksLikeAssetLine(line)) {
       continue;
     }
@@ -148,12 +156,16 @@ function extractAssets(lines) {
   };
 }
 
-// Interpreta uma linha individual da tabela do PDF usando o ID como ativo e o Vlr Atualizado como valor devido.
+// Interpreta uma linha individual da tabela do PDF usando o ID como ativo e o Vlr Final como valor devido.
 function parseAssetLine(line) {
   const normalizedLine = line.replace(/\s+/g, " ").trim();
-  const leadMatch = normalizedLine.match(
-    /^(?<dueDate>\d{2}\/\d{2}\/\d{4})\s+(?<assetId>[A-Z0-9./-]+)\s+(?<rest>.+)$/i,
-  );
+  const leadMatch =
+    normalizedLine.match(
+      /^(?<assetId>[A-Z0-9./-]+)\s+(?<dueDate>\d{2}\/\d{2}\/\d{4})\s+(?<rest>.+)$/i,
+    ) ||
+    normalizedLine.match(
+      /^(?<dueDate>\d{2}\/\d{2}\/\d{4})\s+(?<assetId>[A-Z0-9./-]+)\s+(?<rest>.+)$/i,
+    );
 
   if (!leadMatch?.groups) {
     return null;
@@ -169,24 +181,20 @@ function parseAssetLine(line) {
     return null;
   }
 
-  const firstMoneyIndex = currencyMatches[0].index ?? -1;
-  if (firstMoneyIndex <= 0) {
-    return null;
-  }
-
+  const firstMoneyIndex = currencyMatches[0].index ?? 0;
   const description = rest.slice(0, firstMoneyIndex).replace(/\s+/g, " ").trim();
   const amountToken =
     currencyMatches.at(-2)?.[0] ??
     currencyMatches.at(-1)?.[0] ??
     "";
 
-  if (!description || !amountToken) {
+  if (!amountToken) {
     return null;
   }
 
   return {
     id: assetId,
-    name: description,
+    name: description || assetId,
     reference: dueDateToken,
     dueDate,
     amount: parseBrazilianNumber(amountToken)
@@ -209,6 +217,52 @@ function parseBrazilianNumber(value) {
   return Number.parseFloat(value.replace(/\./g, "").replace(",", "."));
 }
 
+// Busca valores simples no cabecalho, como "Unidade: UND77303" e "Proprietario : Nome".
+function extractInlineMetadataValue(lines, label) {
+  const normalizedLabel = normalizeSearchText(label).toUpperCase();
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const normalizedLine = normalizeSearchText(line).toUpperCase();
+    if (!new RegExp(`^${normalizedLabel}\\s*:`).test(normalizedLine)) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf(":");
+    const inlineValue = separatorIndex >= 0
+      ? line.slice(separatorIndex + 1).replace(/\s+COD ERP:.*$/i, "").trim()
+      : "";
+    if (inlineValue) {
+      return inlineValue;
+    }
+
+    const nextLine = lines[index + 1] ?? "";
+    if (nextLine) {
+      return nextLine.trim();
+    }
+  }
+
+  return "";
+}
+
+// Separa "documento - nome" para exibir cada dado em sua propria caixa.
+function splitOwnerDocumentAndName(value) {
+  const [documentPart, ...nameParts] = String(value).split("-");
+  const name = nameParts.join("-").trim();
+
+  if (!name) {
+    return {
+      document: "",
+      name: String(value).trim()
+    };
+  }
+
+  return {
+    document: documentPart.trim(),
+    name
+  };
+}
+
 // Remove variacoes de acento e caracteres especiais para tornar as buscas do cabecalho mais tolerantes.
 function normalizeSearchText(value) {
   return value
@@ -221,10 +275,83 @@ function normalizeSearchText(value) {
 // Identifica linhas com a estrutura geral da tabela de debitos, mesmo com pequenas variacoes no layout.
 function looksLikeAssetLine(line) {
   const normalizedLine = line.replace(/\s+/g, " ").trim();
-  if (!/^\d{2}\/\d{2}\/\d{4}\s+/.test(normalizedLine)) {
+  if (
+    !/^\d{2}\/\d{2}\/\d{4}\s+/.test(normalizedLine) &&
+    !/^[A-Z0-9./-]+\s+\d{2}\/\d{2}\/\d{4}\s+/i.test(normalizedLine)
+  ) {
     return false;
   }
 
   const currencyMatches = normalizedLine.match(/-?\d[\d.]*,\d{2}/g) ?? [];
-  return currencyMatches.length >= 2;
+  return currencyMatches.length >= 6;
+}
+
+// Soma os subtotais das secoes de honorarios do relatorio para preencher o campo editavel.
+function extractAttorneyFeesAmount(lines) {
+  let total = 0;
+  let isAttorneyFeesSection = false;
+
+  for (const line of lines) {
+    const normalizedLine = normalizeSearchText(line).toUpperCase();
+    if (/^HONORARIOS(?:\s|$)/.test(normalizedLine)) {
+      isAttorneyFeesSection = true;
+      continue;
+    }
+
+    if (!isAttorneyFeesSection) {
+      continue;
+    }
+
+    if (normalizedLine.startsWith("SUB TOTAL")) {
+      const currencyMatches = line.match(/-?\d[\d.]*,\d{2}/g) ?? [];
+      const amountToken = currencyMatches[0] ?? "";
+      if (amountToken) {
+        total += parseBrazilianNumber(amountToken);
+      }
+      isAttorneyFeesSection = false;
+      continue;
+    }
+
+    if (
+      normalizedLine.includes("TOTAL GERAL") ||
+      normalizedLine.includes("COTAS EM ANALISE") ||
+      normalizedLine.includes("CUSTAS PROCESSUAIS") ||
+      normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")
+    ) {
+      isAttorneyFeesSection = false;
+    }
+  }
+
+  return total;
+}
+
+// Captura o subtotal de Vlr Final apenas da secao de debitos condominiais, sem custas.
+function extractDebtSubtotalFinal(lines) {
+  let isDebtSection = false;
+
+  for (const line of lines) {
+    const normalizedLine = normalizeSearchText(line).toUpperCase();
+    if (normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")) {
+      isDebtSection = true;
+      continue;
+    }
+
+    if (!isDebtSection) {
+      continue;
+    }
+
+    if (normalizedLine.startsWith("SUB TOTAL")) {
+      const currencyMatches = line.match(/-?\d[\d.]*,\d{2}/g) ?? [];
+      return currencyMatches.at(-2) ?? currencyMatches.at(-1) ?? "";
+    }
+
+    if (
+      normalizedLine.includes("CUSTAS PROCESSUAIS") ||
+      normalizedLine.startsWith("HONORARIOS")
+    ) {
+      return "";
+    }
+  }
+
+  return "";
 }

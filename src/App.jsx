@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  DEFAULT_ATTORNEY_FEES_PERCENT,
+  DEFAULT_ATTORNEY_FEES_AMOUNT,
   DEFAULT_INSTALLMENTS,
   DEFAULT_MONTHLY_RATE_PERCENT,
   MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS,
@@ -43,8 +43,8 @@ export function App() {
   const [monthlyRateInput, setMonthlyRateInput] = useState(
     formatEditablePercent(DEFAULT_MONTHLY_RATE_PERCENT),
   );
-  const [attorneyFeesInput, setAttorneyFeesInput] = useState(
-    formatEditablePercent(DEFAULT_ATTORNEY_FEES_PERCENT),
+  const [attorneyFeesAmountInput, setAttorneyFeesAmountInput] = useState(
+    formatEditableMoney(DEFAULT_ATTORNEY_FEES_AMOUNT),
   );
   const [hasDownPayment, setHasDownPayment] = useState(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
@@ -54,24 +54,18 @@ export function App() {
     monthlyRateInput,
     DEFAULT_MONTHLY_RATE_PERCENT,
   );
-  const attorneyFeesPercent = normalizePercent(
-    attorneyFeesInput,
-    DEFAULT_ATTORNEY_FEES_PERCENT,
-  );
+  const attorneyFeesAmount = normalizeMoney(attorneyFeesAmountInput);
 
   const selectedAssets = assets.filter((asset) =>
     selectedAssetIds.has(asset.id),
   );
   const totalDebt = sumCurrency(selectedAssets, (asset) => asset.amount);
-  const attorneyFeesAmount = roundCurrency(totalDebt * (attorneyFeesPercent / 100));
   const agreementBaseAmount = roundCurrency(totalDebt + attorneyFeesAmount);
   const normalizedDownPaymentAmount = hasDownPayment
     ? roundCurrency(
         Math.min(
           Math.max(
-            Number.parseFloat(
-              String(downPaymentAmount).replace(",", "."),
-            ) || 0,
+            normalizeMoney(downPaymentAmount),
             0,
           ),
           agreementBaseAmount,
@@ -88,7 +82,7 @@ export function App() {
         totalDebt,
         downPayment: normalizedDownPaymentAmount,
         monthlyRatePercent,
-        attorneyFeesPercent,
+        attorneyFeesAmount,
         installmentCount,
         agreementDate,
         firstInstallmentDate: normalizedFirstInstallmentDate,
@@ -119,6 +113,9 @@ export function App() {
         new Set(parsedReport.assets.map((asset) => asset.id)),
       );
       setReportMetadata(parsedReport.metadata);
+      setAttorneyFeesAmountInput(
+        formatEditableMoney(parsedReport.metadata?.attorneyFeesAmount ?? 0),
+      );
       setHasDownPayment(false);
       setDownPaymentAmount("0.00");
       setStatusMessage(
@@ -130,6 +127,7 @@ export function App() {
       setAssets([]);
       setSelectedAssetIds(new Set());
       setReportMetadata(null);
+      setAttorneyFeesAmountInput(formatEditableMoney(DEFAULT_ATTORNEY_FEES_AMOUNT));
       setStatusMessage(
         "Nao foi possivel ler este PDF. Verifique se ele segue o modelo da planilha debito.",
       );
@@ -219,7 +217,7 @@ export function App() {
           installmentCount={installmentCount}
           installmentCountInput={installmentCountInput}
           monthlyRateInput={monthlyRateInput}
-          attorneyFeesInput={attorneyFeesInput}
+          attorneyFeesAmountInput={attorneyFeesAmountInput}
           note={note}
           hasDownPayment={hasDownPayment}
           downPaymentAmount={downPaymentAmount}
@@ -234,9 +232,9 @@ export function App() {
           onMonthlyRateBlur={() =>
             setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
           }
-          onAttorneyFeesChange={setAttorneyFeesInput}
+          onAttorneyFeesAmountChange={setAttorneyFeesAmountInput}
           onAttorneyFeesBlur={() =>
-            setAttorneyFeesInput(formatEditablePercent(attorneyFeesPercent))
+            setAttorneyFeesAmountInput(formatEditableMoney(attorneyFeesAmount))
           }
           onDownPaymentToggle={handleDownPaymentToggle}
           onDownPaymentAmountChange={handleDownPaymentAmountChange}
@@ -297,6 +295,26 @@ function normalizePercent(value, fallbackValue) {
   return Math.max(0, parsedValue);
 }
 
+function normalizeMoney(value) {
+  const rawValue = String(value).trim();
+  const normalizedValue = rawValue.includes(",")
+    ? rawValue.replace(/\./g, "").replace(",", ".")
+    : rawValue;
+  const parsedValue = Number.parseFloat(normalizedValue);
+  if (Number.isNaN(parsedValue)) {
+    return 0;
+  }
+
+  return roundCurrency(Math.max(parsedValue, 0));
+}
+
 function formatEditablePercent(value) {
   return String(value).replace(".", ",");
+}
+
+function formatEditableMoney(value) {
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }

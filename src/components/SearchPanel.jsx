@@ -18,7 +18,7 @@ export function SearchPanel({
     <section className="panel panel--search">
       <div className="panel__header">
         <h2>Upload da Planilha Debito</h2>
-        <p>Leitura automatica dos IDs e do valor atualizado de cada ativo</p>
+        <p>Leitura automatica dos IDs, Vlr Final e honorarios do relatorio</p>
       </div>
 
       <div className="upload-box">
@@ -34,7 +34,7 @@ export function SearchPanel({
 
         <div className="upload-box__meta">
           <strong>{uploadedFileName || "Nenhum arquivo carregado"}</strong>
-          <span>O sistema extrai o ID como ativo e usa o Vlr Atualizado como valor devido.</span>
+          <span>O sistema usa o Vlr Final dos debitos condominiais e ignora custas processuais.</span>
         </div>
       </div>
 
@@ -45,12 +45,24 @@ export function SearchPanel({
             <strong>{reportMetadata.condominium || "-"}</strong>
           </div>
           <div>
+            <span>Proprietario</span>
+            <strong>{reportMetadata.owner || "-"}</strong>
+          </div>
+          <div>
+            <span>Documentacao</span>
+            <strong>{reportMetadata.ownerDocument || "-"}</strong>
+          </div>
+          <div>
             <span>Unidade</span>
             <strong>{reportMetadata.unit || "-"}</strong>
           </div>
           <div>
             <span>Total do relatorio</span>
             <strong>{reportMetadata.totalDebt || "-"}</strong>
+          </div>
+          <div>
+            <span>Honorarios</span>
+            <strong>{formatCurrency(reportMetadata.attorneyFeesAmount || 0)}</strong>
           </div>
         </div>
       )}

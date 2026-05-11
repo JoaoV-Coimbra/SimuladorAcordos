@@ -7,7 +7,7 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 - upload de arquivo PDF da planilha de debito;
 - leitura automatica do relatorio com `pdfjs-dist`;
 - extracao de metadados do PDF, como condominio, unidade e total do relatorio;
-- extracao dos ativos a partir das linhas da tabela, usando o ID do ativo e o campo de valor atualizado;
+- extracao dos ativos a partir da secao de debitos condominiais, usando o ID do ativo e o campo Vlr Final;
 - selecao individual ou total dos ativos que entram na composicao da divida;
 - simulacao automatica do acordo com pro rata e tabela Price;
 - edicao da data da primeira parcela, quantidade de parcelas e observacao comercial;

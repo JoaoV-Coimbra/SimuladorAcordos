@@ -7,17 +7,16 @@ export function calculateAgreement({
   totalDebt,
   downPayment = 0,
   monthlyRatePercent,
-  attorneyFeesPercent = 0,
+  attorneyFeesAmount = 0,
   installmentCount,
   agreementDate,
   firstInstallmentDate,
 }) {
   const normalizedTotalDebt = roundCurrency(Math.max(totalDebt, 0));
-  const normalizedAttorneyFeesPercent = Math.max(attorneyFeesPercent, 0);
-  const attorneyFeesAmount = roundCurrency(
-    normalizedTotalDebt * (normalizedAttorneyFeesPercent / 100),
+  const normalizedAttorneyFeesAmount = roundCurrency(Math.max(attorneyFeesAmount, 0));
+  const agreementBaseAmount = roundCurrency(
+    normalizedTotalDebt + normalizedAttorneyFeesAmount,
   );
-  const agreementBaseAmount = roundCurrency(normalizedTotalDebt + attorneyFeesAmount);
   const normalizedDownPayment = roundCurrency(
     Math.min(Math.max(downPayment, 0), agreementBaseAmount),
   );
@@ -60,8 +59,7 @@ export function calculateAgreement({
 
   return {
     totalDebt: normalizedTotalDebt,
-    attorneyFeesPercent: normalizedAttorneyFeesPercent,
-    attorneyFeesAmount,
+    attorneyFeesAmount: normalizedAttorneyFeesAmount,
     agreementBaseAmount,
     downPayment: normalizedDownPayment,
     financedBalance,
