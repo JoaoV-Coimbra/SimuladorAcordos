@@ -7,7 +7,8 @@ export function AgreementPanel({
   minimumFirstInstallmentDate,
   installmentCount,
   installmentCountInput,
-  monthlyRatePercent,
+  monthlyRateInput,
+  attorneyFeesInput,
   note,
   hasDownPayment,
   downPaymentAmount,
@@ -18,6 +19,10 @@ export function AgreementPanel({
   onFirstInstallmentDateChange,
   onInstallmentCountChange,
   onInstallmentCountBlur,
+  onMonthlyRateChange,
+  onMonthlyRateBlur,
+  onAttorneyFeesChange,
+  onAttorneyFeesBlur,
   onDownPaymentToggle,
   onDownPaymentAmountChange,
   onNoteChange,
@@ -61,7 +66,13 @@ export function AgreementPanel({
 
           <label className="field">
             <span>Taxa a.m. (%)</span>
-            <input type="number" value={monthlyRatePercent} disabled readOnly />
+            <input
+              type="text"
+              inputMode="decimal"
+              value={monthlyRateInput}
+              onChange={(event) => onMonthlyRateChange(event.target.value)}
+              onBlur={onMonthlyRateBlur}
+            />
           </label>
 
           <label className="field">
@@ -73,6 +84,17 @@ export function AgreementPanel({
               value={installmentCountInput}
               onChange={(event) => onInstallmentCountChange(event.target.value)}
               onBlur={onInstallmentCountBlur}
+            />
+          </label>
+
+          <label className="field">
+            <span>Honorarios advocaticios (%)</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={attorneyFeesInput}
+              onChange={(event) => onAttorneyFeesChange(event.target.value)}
+              onBlur={onAttorneyFeesBlur}
             />
           </label>
 
@@ -138,6 +160,7 @@ export function AgreementPanel({
 
           <div className="proposal__grid proposal__grid--headline">
             <ResultCard label="Divida total" value={formatCurrency(simulation.totalDebt)} highlight />
+            <ResultCard label="Honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
             <ResultCard label="Entrada" value={formatCurrency(simulation.downPayment)} />
             <ResultCard label="Saldo parcelado" value={formatCurrency(simulation.financedBalance)} />
             <ResultCard label="Parcela (Price)" value={formatCurrency(simulation.installmentAmount)} />
@@ -148,13 +171,17 @@ export function AgreementPanel({
             <section className="info-card">
               <div className="info-card__header">
                 <h4>Resumo financeiro</h4>
-                <p>Base de calculo do acordo com pro rata e tabela Price.</p>
+                <p>Base de calculo do acordo com tabela Price no modelo Pre.</p>
               </div>
               <div className="info-grid">
                 <InfoPill label="Data do acordo" value={formatDate(simulation.agreementDate)} />
                 <InfoPill label="1a parcela" value={formatDate(simulation.firstInstallmentDate)} />
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
                 <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
+                <InfoPill label="Periodo Price" value={simulation.pricePrePeriod} />
+                <InfoPill label="Honorarios" value={`${formatPercent(simulation.attorneyFeesPercent)}%`} />
+                <InfoPill label="Valor dos honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
+                <InfoPill label="Base do acordo" value={formatCurrency(simulation.agreementBaseAmount)} />
                 <InfoPill label="Entrada" value={formatCurrency(simulation.downPayment)} />
                 <InfoPill label="Saldo corrigido" value={formatCurrency(simulation.correctedBalance)} />
                 <InfoPill label="Total pago" value={formatCurrency(simulation.totalPaid)} />
@@ -193,7 +220,8 @@ export function AgreementPanel({
             </div>
             <div className="proposal-print-summary__content">
               <p>
-                Divida consolidada em {formatCurrency(simulation.totalDebt)}, com
+                Divida consolidada em {formatCurrency(simulation.totalDebt)}, com honorarios
+                advocaticios de {formatCurrency(simulation.attorneyFeesAmount)} e
                 {simulation.downPayment > 0
                   ? ` entrada de ${formatCurrency(simulation.downPayment)} e`
                   : ""}{" "}

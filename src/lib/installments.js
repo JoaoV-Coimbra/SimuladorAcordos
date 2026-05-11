@@ -3,6 +3,7 @@ import { roundCurrency } from "./money.js";
 
 // Gera a tabela detalhada das parcelas em um fluxo Price com pagamento no inicio do periodo.
 export function buildInstallmentSchedule({
+  financedBalance,
   correctedBalance,
   monthlyRate,
   installmentCount,
@@ -14,7 +15,7 @@ export function buildInstallmentSchedule({
 
   for (let installmentNumber = 1; installmentNumber <= installmentCount; installmentNumber += 1) {
     const isFirstInstallment = installmentNumber === 1;
-    const startingBalance = carriedBalance;
+    const startingBalance = isFirstInstallment ? financedBalance : carriedBalance;
     const interestExact = isFirstInstallment ? 0 : startingBalance * monthlyRate;
     const balanceBeforePayment = startingBalance + interestExact;
     const installmentExact = installmentAmountExact;

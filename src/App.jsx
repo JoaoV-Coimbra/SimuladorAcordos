@@ -1,7 +1,8 @@
 import { useState } from "react";
 import {
+  DEFAULT_ATTORNEY_FEES_PERCENT,
   DEFAULT_INSTALLMENTS,
-  FIXED_MONTHLY_RATE_PERCENT,
+  DEFAULT_MONTHLY_RATE_PERCENT,
   MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS,
 } from "./constants.js";
 import { AgreementPanel } from "./components/AgreementPanel.jsx";
@@ -39,15 +40,31 @@ export function App() {
   const [installmentCountInput, setInstallmentCountInput] = useState(
     String(DEFAULT_INSTALLMENTS),
   );
+  const [monthlyRateInput, setMonthlyRateInput] = useState(
+    formatEditablePercent(DEFAULT_MONTHLY_RATE_PERCENT),
+  );
+  const [attorneyFeesInput, setAttorneyFeesInput] = useState(
+    formatEditablePercent(DEFAULT_ATTORNEY_FEES_PERCENT),
+  );
   const [hasDownPayment, setHasDownPayment] = useState(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
   const [note, setNote] = useState("");
   const installmentCount = normalizeInstallmentCount(installmentCountInput);
+  const monthlyRatePercent = normalizePercent(
+    monthlyRateInput,
+    DEFAULT_MONTHLY_RATE_PERCENT,
+  );
+  const attorneyFeesPercent = normalizePercent(
+    attorneyFeesInput,
+    DEFAULT_ATTORNEY_FEES_PERCENT,
+  );
 
   const selectedAssets = assets.filter((asset) =>
     selectedAssetIds.has(asset.id),
   );
   const totalDebt = sumCurrency(selectedAssets, (asset) => asset.amount);
+  const attorneyFeesAmount = roundCurrency(totalDebt * (attorneyFeesPercent / 100));
+  const agreementBaseAmount = roundCurrency(totalDebt + attorneyFeesAmount);
   const normalizedDownPaymentAmount = hasDownPayment
     ? roundCurrency(
         Math.min(
@@ -57,7 +74,7 @@ export function App() {
             ) || 0,
             0,
           ),
-          totalDebt,
+          agreementBaseAmount,
         ),
       )
     : 0;
@@ -70,7 +87,8 @@ export function App() {
     ? calculateAgreement({
         totalDebt,
         downPayment: normalizedDownPaymentAmount,
-        monthlyRatePercent: FIXED_MONTHLY_RATE_PERCENT,
+        monthlyRatePercent,
+        attorneyFeesPercent,
         installmentCount,
         agreementDate,
         firstInstallmentDate: normalizedFirstInstallmentDate,
@@ -200,7 +218,8 @@ export function App() {
           minimumFirstInstallmentDate={minimumFirstInstallmentDate}
           installmentCount={installmentCount}
           installmentCountInput={installmentCountInput}
-          monthlyRatePercent={FIXED_MONTHLY_RATE_PERCENT}
+          monthlyRateInput={monthlyRateInput}
+          attorneyFeesInput={attorneyFeesInput}
           note={note}
           hasDownPayment={hasDownPayment}
           downPaymentAmount={downPaymentAmount}
@@ -211,6 +230,14 @@ export function App() {
           onFirstInstallmentDateChange={setFirstInstallmentDate}
           onInstallmentCountChange={handleInstallmentCountChange}
           onInstallmentCountBlur={handleInstallmentCountBlur}
+          onMonthlyRateChange={setMonthlyRateInput}
+          onMonthlyRateBlur={() =>
+            setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
+          }
+          onAttorneyFeesChange={setAttorneyFeesInput}
+          onAttorneyFeesBlur={() =>
+            setAttorneyFeesInput(formatEditablePercent(attorneyFeesPercent))
+          }
           onDownPaymentToggle={handleDownPaymentToggle}
           onDownPaymentAmountChange={handleDownPaymentAmountChange}
           onNoteChange={setNote}
@@ -259,4 +286,17 @@ function normalizeInstallmentCount(value) {
   }
 
   return Math.max(1, parsedValue);
+}
+
+function normalizePercent(value, fallbackValue) {
+  const parsedValue = Number.parseFloat(String(value).replace(",", "."));
+  if (Number.isNaN(parsedValue)) {
+    return fallbackValue;
+  }
+
+  return Math.max(0, parsedValue);
+}
+
+function formatEditablePercent(value) {
+  return String(value).replace(".", ",");
 }

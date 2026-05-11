@@ -458,7 +458,7 @@ tbody tr.selected {
 }
 
 .proposal__grid--headline {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .result-card {
