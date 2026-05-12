@@ -21,7 +21,9 @@ import { roundCurrency, sumCurrency } from "./lib/money.js";
 
 // Coordena o fluxo principal da tela: upload do PDF, selecao de ativos e simulacao do acordo.
 export function App() {
-  const [agreementDate] = useState(() => formatDateForInput(new Date()));
+  const [agreementDate, setAgreementDate] = useState(() =>
+    formatDateForInput(new Date()),
+  );
   const minimumFirstInstallmentDate = formatDateForInput(
     addBusinessDays(
       parseInputDate(agreementDate),
@@ -119,6 +121,12 @@ export function App() {
   }, [contractDialogOpen]);
 
   useEffect(() => {
+    setFirstInstallmentDate((currentDate) =>
+      normalizeFirstInstallmentDate(currentDate, minimumFirstInstallmentDate),
+    );
+  }, [minimumFirstInstallmentDate]);
+
+  useEffect(() => {
     function handleAfterPrint() {
       document.body.classList.remove("printing-contract");
     }
@@ -211,6 +219,15 @@ export function App() {
   // Ao sair do campo, aplica o minimo permitido para evitar deixar o formulario invalido.
   function handleInstallmentCountBlur() {
     setInstallmentCountInput(String(normalizeInstallmentCount(installmentCountInput)));
+  }
+
+  // Atualiza a data-base do acordo e reaplica as regras dependentes dela no restante da simulacao.
+  function handleAgreementDateChange(value) {
+    if (!value) {
+      return;
+    }
+
+    setAgreementDate(value);
   }
 
   // Ativa ou remove a entrada inicial mantendo o valor digitado para cenarios alternativos.
@@ -351,6 +368,7 @@ export function App() {
             simulation={simulation}
             searchDescription={searchDescription}
             onExportPdf={handleExportPdf}
+            onAgreementDateChange={handleAgreementDateChange}
             onFirstInstallmentDateChange={setFirstInstallmentDate}
             onInstallmentCountChange={handleInstallmentCountChange}
             onInstallmentCountBlur={handleInstallmentCountBlur}

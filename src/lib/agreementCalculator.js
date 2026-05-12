@@ -25,9 +25,10 @@ export function calculateAgreement({
   );
   const monthlyRate = monthlyRatePercent / 100;
   const prorataDays = Math.max(dateDiffInDays(agreementDate, firstInstallmentDate), 0);
-  const pricePrePeriod = monthlyRate === 0 ? 0 : -1;
+  const dailyRate = monthlyRate / 30;
+  const pricePrePeriod = prorataDays;
   const correctedBalance = roundCurrency(
-    financedBalance * Math.pow(1 + monthlyRate, pricePrePeriod),
+    financedBalance * Math.pow(1 + dailyRate, prorataDays),
   );
 
   let installmentAmountExact = 0;
@@ -35,18 +36,20 @@ export function calculateAgreement({
     installmentAmountExact = monthlyRate === 0
       ? correctedBalance / installmentCount
       : correctedBalance *
-          (monthlyRate / (1 - Math.pow(1 + monthlyRate, -installmentCount)));
+          (
+            monthlyRate /
+            ((1 - Math.pow(1 + monthlyRate, -installmentCount)) * (1 + monthlyRate))
+          );
   }
 
-  const installmentAmount = roundCurrency(installmentAmountExact);
   const schedule = buildInstallmentSchedule({
-    financedBalance,
     correctedBalance,
     monthlyRate,
     installmentCount,
     firstInstallmentDate,
     installmentAmountExact,
   });
+  const installmentAmount = roundCurrency(installmentAmountExact);
   const totalPaid = roundCurrency(
     normalizedDownPayment +
       schedule.reduce((total, installment) => total + installment.installmentAmount, 0),
@@ -69,7 +72,7 @@ export function calculateAgreement({
     firstInstallmentDate,
     prorataDays,
     pricePrePeriod,
-    dailyRatePercent: monthlyRate / 30 * 100,
+    dailyRatePercent: dailyRate * 100,
     correctedBalance,
     installmentAmount,
     schedule,

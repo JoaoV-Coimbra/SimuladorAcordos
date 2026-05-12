@@ -16,6 +16,7 @@ export function AgreementPanel({
   simulation,
   searchDescription,
   onExportPdf,
+  onAgreementDateChange,
   onFirstInstallmentDateChange,
   onInstallmentCountChange,
   onInstallmentCountBlur,
@@ -50,7 +51,12 @@ export function AgreementPanel({
         <div className="grid">
           <label className="field">
             <span>Data do acordo</span>
-            <input type="date" value={agreementDate} disabled readOnly />
+            <input
+              type="date"
+              value={agreementDate}
+              onChange={(event) => onAgreementDateChange(event.target.value)}
+              required
+            />
           </label>
 
           <label className="field">
@@ -154,12 +160,16 @@ export function AgreementPanel({
                   Entrada de {formatCurrency(simulation.downPayment)}
                 </div>
               )}
-              <strong>{simulation.installmentCount} parcelas fixas</strong>
+              <strong>{simulation.installmentCount} parcelas Price</strong>
             </div>
           </div>
 
           <div className="proposal__grid proposal__grid--headline">
-            <ResultCard label="Divida total" value={formatCurrency(simulation.totalDebt)} highlight />
+            <ResultCard
+              label="Saldo corrigido"
+              value={formatCurrency(simulation.correctedBalance)}
+              highlight
+            />
             <ResultCard label="Honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
             <ResultCard label="Entrada" value={formatCurrency(simulation.downPayment)} />
             <ResultCard label="Saldo parcelado" value={formatCurrency(simulation.financedBalance)} />
@@ -176,6 +186,7 @@ export function AgreementPanel({
               <div className="info-grid">
                 <InfoPill label="Data do acordo" value={formatDate(simulation.agreementDate)} />
                 <InfoPill label="1a parcela" value={formatDate(simulation.firstInstallmentDate)} />
+                <InfoPill label="Divida total" value={formatCurrency(simulation.totalDebt)} />
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
                 <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
                 <InfoPill label="Periodo Price" value={simulation.pricePrePeriod} />
@@ -218,13 +229,14 @@ export function AgreementPanel({
               <p>Resumo usado para montar o contrato em PDF.</p>
             </div>
             <div className="proposal-print-summary__content">
-              <p>
+                <p>
                 Divida consolidada em {formatCurrency(simulation.totalDebt)}, com honorarios
                 advocaticios de {formatCurrency(simulation.attorneyFeesAmount)} e
                 {simulation.downPayment > 0
                   ? ` entrada de ${formatCurrency(simulation.downPayment)} e`
                   : ""}{" "}
-                saldo parcelado em {simulation.installmentCount} parcela(s) fixas de{" "}
+                saldo parcelado em {simulation.installmentCount} parcela(s) no modelo Price, com
+                primeira parcela de{" "}
                 {formatCurrency(simulation.installmentAmount)}.
               </p>
               <p>

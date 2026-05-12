@@ -32,6 +32,32 @@ export function isWeekend(date) {
   return weekday === 0 || weekday === 6;
 }
 
+// Conta apenas os dias uteis estritamente entre duas datas para reproduzir a regra da planilha.
+export function countBusinessDaysBetween(startDate, endDate) {
+  if (!startDate || !endDate) {
+    return 0;
+  }
+
+  const start = parseInputDate(startDate);
+  const end = parseInputDate(endDate);
+  if (start >= end) {
+    return 0;
+  }
+
+  const current = new Date(start);
+  current.setDate(current.getDate() + 1);
+
+  let businessDays = 0;
+  while (current < end) {
+    if (!isWeekend(current)) {
+      businessDays += 1;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return businessDays;
+}
+
 // Calcula a diferenca em dias corridos entre duas datas no formato do input.
 export function dateDiffInDays(startDate, endDate) {
   if (!startDate || !endDate) {

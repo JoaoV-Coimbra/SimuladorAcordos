@@ -51,7 +51,7 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 - saldo parcelado = divida total selecionada + honorarios advocaticios - entrada;
 - taxa diaria = taxa mensal / 30;
 - dias pro rata = diferenca entre a data do acordo e a data da primeira parcela;
-- saldo corrigido = saldo parcelado * (1 + taxa mensal) ^ -1;
+- saldo corrigido = saldo parcelado * (1 + taxa diaria) ^ dias pro rata;
 - parcela fixa = formula Price no modelo Pre sobre o saldo corrigido;
 - o cronograma aplica juros mensais a partir da segunda parcela;
 - total pago = entrada + soma das parcelas;
