@@ -32,7 +32,7 @@ export function AgreementPanel({
       <div className="panel__header">
         <div>
           <h2>Dados do Acordo</h2>
-          <p>Parametros usados na semi-proposta</p>
+          <p>Parametros usados no contrato</p>
         </div>
         <div className="panel__header-actions">
           <button
@@ -41,7 +41,7 @@ export function AgreementPanel({
             onClick={onExportPdf}
             disabled={!simulation}
           >
-            Exportar PDF
+            Gerar contrato PDF
           </button>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function AgreementPanel({
           <section className="proposal-print-summary info-card">
             <div className="info-card__header">
               <h4>Condicoes da semi-proposta</h4>
-              <p>Resumo pronto para exportacao em PDF ou impressao.</p>
+              <p>Resumo usado para montar o contrato em PDF.</p>
             </div>
             <div className="proposal-print-summary__content">
               <p>

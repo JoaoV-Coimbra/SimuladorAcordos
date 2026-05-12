@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DEFAULT_ATTORNEY_FEES_AMOUNT,
   DEFAULT_INSTALLMENTS,
   DEFAULT_MONTHLY_RATE_PERCENT,
   MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS,
 } from "./constants.js";
+import { AgreementContract } from "./components/AgreementContract.jsx";
 import { AgreementPanel } from "./components/AgreementPanel.jsx";
 import { BrandLogos } from "./components/BrandLogos.jsx";
 import { SearchPanel } from "./components/SearchPanel.jsx";
+import { buildAgreementDocumentData } from "./lib/agreementDocument.js";
 import { calculateAgreement } from "./lib/agreementCalculator.js";
 import {
   addBusinessDays,
@@ -49,6 +51,13 @@ export function App() {
   const [hasDownPayment, setHasDownPayment] = useState(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
   const [note, setNote] = useState("");
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [contractFields, setContractFields] = useState({
+    address: "",
+    email: "",
+    unit: ""
+  });
+  const [contractValidationMessage, setContractValidationMessage] = useState("");
   const installmentCount = normalizeInstallmentCount(installmentCountInput);
   const monthlyRatePercent = normalizePercent(
     monthlyRateInput,
@@ -93,6 +102,30 @@ export function App() {
     reportMetadata,
     uploadedFileName,
   );
+  const contractDocumentData = simulation
+    ? buildAgreementDocumentData({
+        agreementDate,
+        reportMetadata,
+        selectedAssets,
+        simulation,
+        contractFields
+      })
+    : null;
+
+  useEffect(() => {
+    if (!contractDialogOpen) {
+      setContractValidationMessage("");
+    }
+  }, [contractDialogOpen]);
+
+  useEffect(() => {
+    function handleAfterPrint() {
+      document.body.classList.remove("printing-contract");
+    }
+
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
 
   // Le o PDF enviado, extrai os ativos e prepara a selecao inicial para simulacao.
   async function handleFileUpload(event) {
@@ -116,6 +149,11 @@ export function App() {
       setAttorneyFeesAmountInput(
         formatEditableMoney(parsedReport.metadata?.attorneyFeesAmount ?? 0),
       );
+      setContractFields({
+        address: "",
+        email: "",
+        unit: parsedReport.metadata?.unit ?? ""
+      });
       setHasDownPayment(false);
       setDownPaymentAmount("0.00");
       setStatusMessage(
@@ -128,6 +166,11 @@ export function App() {
       setSelectedAssetIds(new Set());
       setReportMetadata(null);
       setAttorneyFeesAmountInput(formatEditableMoney(DEFAULT_ATTORNEY_FEES_AMOUNT));
+      setContractFields({
+        address: "",
+        email: "",
+        unit: ""
+      });
       setStatusMessage(
         "Nao foi possivel ler este PDF. Verifique se ele segue o modelo da planilha debito.",
       );
@@ -180,68 +223,231 @@ export function App() {
     setDownPaymentAmount(value);
   }
 
-  // Abre a impressao do navegador com o layout preparado para salvar o acordo em PDF.
+  // Abre o formulario complementar para montar o contrato final antes da impressao.
   function handleExportPdf() {
-    window.print();
+    if (!simulation) {
+      return;
+    }
+
+    setContractDialogOpen(true);
+  }
+
+  function handleContractFieldChange(field, value) {
+    setContractFields((currentFields) => ({
+      ...currentFields,
+      [field]: value
+    }));
+  }
+
+  function handleContractSubmit(event) {
+    event.preventDefault();
+    const missingFields = [];
+    if (!contractFields.address.trim()) {
+      missingFields.push("endereco");
+    }
+    if (!contractFields.email.trim()) {
+      missingFields.push("e-mail");
+    }
+    if (!contractFields.unit.trim()) {
+      missingFields.push("unidade");
+    }
+
+    if (missingFields.length > 0) {
+      setContractValidationMessage(
+        `Preencha ${missingFields.join(", ")} antes de gerar o contrato.`,
+      );
+      return;
+    }
+
+    setContractDialogOpen(false);
+    setContractValidationMessage("");
+    printContractDocument();
+  }
+
+  function printContractDocument() {
+    const contractElement = document.getElementById("contract-print-root");
+    if (!contractElement) {
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      document.body.classList.add("printing-contract");
+      window.setTimeout(() => {
+        window.print();
+      }, 50);
+      return;
+    }
+
+    const styleMarkup = Array.from(
+      document.querySelectorAll("style, link[rel='stylesheet']"),
+    )
+      .map((element) => element.outerHTML)
+      .join("\n");
+
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    ${styleMarkup}
+  </head>
+  <body class="printing-contract">
+    ${contractElement.outerHTML}
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          window.focus();
+          window.print();
+        }, 120);
+      });
+      window.addEventListener("afterprint", () => window.close());
+    <\/script>
+  </body>
+</html>`);
+    printWindow.document.close();
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Simulador Web</p>
-          <h1>Calculadora de Acordo por PDF</h1>
-        </div>
-        <div className="topbar__meta">
-          <BrandLogos />
-          <strong>Leitura automatica de debitos</strong>
-        </div>
-      </header>
+    <>
+      <main className="app-shell">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Simulador Web</p>
+            <h1>Calculadora de Acordo por PDF</h1>
+          </div>
+          <div className="topbar__meta">
+            <BrandLogos />
+            <strong>Leitura automatica de debitos</strong>
+          </div>
+        </header>
 
-      <div className="workspace">
-        <SearchPanel
-          assets={assets}
-          selectedAssetIds={selectedAssetIds}
-          statusMessage={statusMessage}
-          uploadedFileName={uploadedFileName}
-          reportMetadata={reportMetadata}
-          onFileUpload={handleFileUpload}
-          onToggleAsset={handleToggleAsset}
-          onToggleAll={handleToggleAll}
-        />
+        <div className="workspace">
+          <SearchPanel
+            assets={assets}
+            selectedAssetIds={selectedAssetIds}
+            statusMessage={statusMessage}
+            uploadedFileName={uploadedFileName}
+            reportMetadata={reportMetadata}
+            onFileUpload={handleFileUpload}
+            onToggleAsset={handleToggleAsset}
+            onToggleAll={handleToggleAll}
+          />
 
-        <AgreementPanel
-          agreementDate={agreementDate}
-          firstInstallmentDate={normalizedFirstInstallmentDate}
-          minimumFirstInstallmentDate={minimumFirstInstallmentDate}
-          installmentCount={installmentCount}
-          installmentCountInput={installmentCountInput}
-          monthlyRateInput={monthlyRateInput}
-          attorneyFeesAmountInput={attorneyFeesAmountInput}
-          note={note}
-          hasDownPayment={hasDownPayment}
-          downPaymentAmount={downPaymentAmount}
-          selectedAssets={selectedAssets}
-          simulation={simulation}
-          searchDescription={searchDescription}
-          onExportPdf={handleExportPdf}
-          onFirstInstallmentDateChange={setFirstInstallmentDate}
-          onInstallmentCountChange={handleInstallmentCountChange}
-          onInstallmentCountBlur={handleInstallmentCountBlur}
-          onMonthlyRateChange={setMonthlyRateInput}
-          onMonthlyRateBlur={() =>
-            setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
-          }
-          onAttorneyFeesAmountChange={setAttorneyFeesAmountInput}
-          onAttorneyFeesBlur={() =>
-            setAttorneyFeesAmountInput(formatEditableMoney(attorneyFeesAmount))
-          }
-          onDownPaymentToggle={handleDownPaymentToggle}
-          onDownPaymentAmountChange={handleDownPaymentAmountChange}
-          onNoteChange={setNote}
-        />
-      </div>
-    </main>
+          <AgreementPanel
+            agreementDate={agreementDate}
+            firstInstallmentDate={normalizedFirstInstallmentDate}
+            minimumFirstInstallmentDate={minimumFirstInstallmentDate}
+            installmentCount={installmentCount}
+            installmentCountInput={installmentCountInput}
+            monthlyRateInput={monthlyRateInput}
+            attorneyFeesAmountInput={attorneyFeesAmountInput}
+            note={note}
+            hasDownPayment={hasDownPayment}
+            downPaymentAmount={downPaymentAmount}
+            selectedAssets={selectedAssets}
+            simulation={simulation}
+            searchDescription={searchDescription}
+            onExportPdf={handleExportPdf}
+            onFirstInstallmentDateChange={setFirstInstallmentDate}
+            onInstallmentCountChange={handleInstallmentCountChange}
+            onInstallmentCountBlur={handleInstallmentCountBlur}
+            onMonthlyRateChange={setMonthlyRateInput}
+            onMonthlyRateBlur={() =>
+              setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
+            }
+            onAttorneyFeesAmountChange={setAttorneyFeesAmountInput}
+            onAttorneyFeesBlur={() =>
+              setAttorneyFeesAmountInput(formatEditableMoney(attorneyFeesAmount))
+            }
+            onDownPaymentToggle={handleDownPaymentToggle}
+            onDownPaymentAmountChange={handleDownPaymentAmountChange}
+            onNoteChange={setNote}
+          />
+        </div>
+
+        {contractDialogOpen && (
+          <div className="dialog-backdrop" role="presentation">
+            <section
+              className="dialog-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="contract-dialog-title"
+            >
+              <div className="dialog-card__header">
+                <div>
+                  <h2 id="contract-dialog-title">Complementar dados do contrato</h2>
+                  <p>O report ja preenche nome, documento e valores. Falta informar os campos abaixo.</p>
+                </div>
+                <button
+                  type="button"
+                  className="button button--ghost"
+                  onClick={() => setContractDialogOpen(false)}
+                >
+                  Fechar
+                </button>
+              </div>
+
+              <form className="grid" onSubmit={handleContractSubmit}>
+                <label className="field field--full">
+                  <span>Endereco completo</span>
+                  <input
+                    type="text"
+                    value={contractFields.address}
+                    onChange={(event) => handleContractFieldChange("address", event.target.value)}
+                    placeholder="Rua, numero, complemento, bairro, cidade e CEP"
+                    required
+                  />
+                </label>
+
+                <label className="field">
+                  <span>E-mail</span>
+                  <input
+                    type="email"
+                    value={contractFields.email}
+                    onChange={(event) => handleContractFieldChange("email", event.target.value)}
+                    placeholder="nome@exemplo.com"
+                    required
+                  />
+                </label>
+
+                <label className="field">
+                  <span>Unidade</span>
+                  <input
+                    type="text"
+                    value={contractFields.unit}
+                    onChange={(event) => handleContractFieldChange("unit", event.target.value)}
+                    placeholder="Ex.: 103 BLOCO 19"
+                    required
+                  />
+                </label>
+
+                {contractValidationMessage && (
+                  <div className="dialog-warning">{contractValidationMessage}</div>
+                )}
+
+                <div className="dialog-actions">
+                  <button
+                    type="button"
+                    className="button button--ghost"
+                    onClick={() => setContractDialogOpen(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="button button--primary">
+                    Gerar PDF
+                  </button>
+                </div>
+              </form>
+            </section>
+          </div>
+        )}
+      </main>
+
+      <AgreementContract documentData={contractDocumentData} />
+    </>
   );
 }
 

@@ -178,6 +178,10 @@ select {
   align-content: end;
 }
 
+.field--full {
+  grid-column: 1 / -1;
+}
+
 .field span {
   color: var(--muted);
   font-size: 0.84rem;
@@ -330,6 +334,63 @@ select {
   background: var(--surface);
   color: var(--primary);
   border-color: #b8d2e5;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-card {
+  width: min(720px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.22);
+  padding: 22px;
+}
+
+.dialog-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.dialog-card__header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.dialog-card__header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.dialog-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dialog-warning {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border: 1px solid #e8c07d;
+  border-radius: var(--radius);
+  background: #fff7ea;
+  color: var(--warning);
+  font-size: 0.88rem;
 }
 
 .empty-state {
@@ -704,6 +765,125 @@ tbody tr.selected {
   font-weight: 700;
 }
 
+.contract-print-root {
+  display: none;
+}
+
+.contract-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 0;
+  background: #ffffff;
+  color: #000000;
+  font-family: "Times New Roman", Times, serif;
+}
+
+.contract-page-header,
+.contract-page-footer {
+  display: none;
+}
+
+.contract-page-header__logo {
+  display: block;
+  width: 54mm;
+  height: auto;
+}
+
+.contract-header {
+  position: relative;
+  min-height: 24mm;
+  margin-bottom: 8mm;
+}
+
+.contract-header__logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28mm;
+  height: auto;
+}
+
+.contract-header h1 {
+  margin: 0;
+  font-size: 12pt;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.contract-body {
+  display: grid;
+  gap: 0;
+}
+
+.contract-body p,
+.contract-footer p {
+  margin: 0;
+  font-size: 12pt;
+  line-height: 1.15;
+  text-align: justify;
+}
+
+.contract-body p + p {
+  margin-top: 12pt;
+}
+
+.contract-clauses {
+  margin: 12pt 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: contract-clause;
+}
+
+.contract-clauses li {
+  position: relative;
+  margin: 0;
+  padding-left: 26pt;
+  font-size: 12pt;
+  line-height: 1.45;
+  text-align: justify;
+  break-inside: avoid-page;
+  page-break-inside: avoid;
+  orphans: 3;
+  widows: 3;
+}
+
+.contract-clauses li + li {
+  margin-top: 12pt;
+}
+
+.contract-clauses li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20pt;
+  content: counter(contract-clause) ".";
+  counter-increment: contract-clause;
+  font-weight: 700;
+  text-align: right;
+}
+
+.contract-footer {
+  margin-top: 26pt;
+}
+
+.contract-signatures {
+  display: grid;
+  gap: 28pt;
+  margin-top: 40pt;
+}
+
+.contract-signature-block {
+  text-align: center;
+}
+
+.contract-signature-line {
+  width: min(100%, 520px);
+  margin: 0 auto 8px;
+  border-top: 1px solid #000000;
+}
+
 @media (max-width: 1060px) {
   .workspace {
     grid-template-columns: 1fr;
@@ -769,6 +949,16 @@ tbody tr.selected {
     border-radius: 14px;
   }
 
+  .dialog-backdrop {
+    padding: 14px;
+  }
+
+  .dialog-card,
+  .dialog-card__header,
+  .dialog-actions {
+    display: grid;
+  }
+
   .proposal__hero,
   .info-card,
   .proposal-schedule,
@@ -788,12 +978,64 @@ tbody tr.selected {
 
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 10mm;
+    size: A4;
+    margin: 80px 20mm 60px 20mm;
   }
 
   body {
     background: #ffffff;
+  }
+
+  body.printing-contract .app-shell {
+    display: none !important;
+  }
+
+  body.printing-contract .contract-print-root {
+    display: block !important;
+  }
+
+  body.printing-contract .contract-page-header {
+    display: none !important;
+  }
+
+  body.printing-contract .contract-page-footer {
+    position: fixed;
+    bottom: 0;
+    left: 20mm;
+    right: 20mm;
+    display: block !important;
+    color: #000000;
+    font-family: "Times New Roman", Times, serif;
+    text-align: center;
+  }
+
+  body.printing-contract .contract-page-footer p {
+    margin: 0;
+    font-size: 8pt;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  body.printing-contract .contract-sheet {
+    width: 100%;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  body.printing-contract .contract-body p,
+  body.printing-contract .contract-footer p,
+  body.printing-contract .contract-clauses li {
+    font-size: 12pt;
+    line-height: 1.15;
+  }
+
+  body.printing-contract .contract-signature-block {
+    break-inside: avoid;
+  }
+
+  body:not(.printing-contract) .contract-print-root {
+    display: none !important;
   }
 
   .app-shell {

@@ -27,3 +27,18 @@ export function formatDate(value) {
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
 }
+
+// Converte YYYY-MM-DD para uma data longa em pt-BR, usada no rodape do contrato.
+export function formatDateLong(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const [year, month, day] = value.split("-");
+  const date = new Date(`${year}-${month}-${day}T12:00:00`);
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+}
