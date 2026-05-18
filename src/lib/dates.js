@@ -58,6 +58,29 @@ export function countBusinessDaysBetween(startDate, endDate) {
   return businessDays;
 }
 
+// Conta dias uteis incluindo as duas pontas do intervalo.
+export function countBusinessDaysInclusive(startDate, endDate) {
+  if (!startDate || !endDate) {
+    return 0;
+  }
+
+  const current = parseInputDate(startDate);
+  const end = parseInputDate(endDate);
+  if (current > end) {
+    return 0;
+  }
+
+  let businessDays = 0;
+  while (current <= end) {
+    if (!isWeekend(current)) {
+      businessDays += 1;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return businessDays;
+}
+
 // Calcula a diferenca em dias corridos entre duas datas no formato do input.
 export function dateDiffInDays(startDate, endDate) {
   if (!startDate || !endDate) {

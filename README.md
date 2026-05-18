@@ -1,6 +1,6 @@
 # Simulador de Acordos
 
-Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upload de uma planilha de debito em PDF.
+Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upload de uma planilha de debito em PDF, gerar o contrato final e enviar o PDF para assinatura eletronica por meio da API FastAPI/D4Sign.
 
 ## Funcionalidades atuais
 
@@ -10,8 +10,11 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 - extracao dos ativos a partir da secao de debitos condominiais, usando o ID do ativo e o campo Vlr Final;
 - selecao individual ou total dos ativos que entram na composicao da divida;
 - simulacao automatica do acordo com pro rata e tabela Price;
-- edicao da data da primeira parcela, quantidade de parcelas e observacao comercial;
-- exportacao da semi-proposta pelo fluxo de impressao do navegador.
+- edicao da data do acordo, data da primeira parcela, quantidade de parcelas, taxa, honorarios, entrada e observacao comercial;
+- geracao do contrato em formato imprimivel;
+- exportacao do contrato para PDF com `html2pdf.js`;
+- envio do PDF gerado para assinatura eletronica pela API `/api/signatures`;
+- biblioteca local de casos salvos no `localStorage`.
 
 ## Como rodar
 
@@ -20,7 +23,33 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 3. Acesse a URL exibida pelo Vite.
 4. Envie um PDF no formato esperado pela planilha de debito.
 5. Revise os ativos extraidos, ajuste a selecao e preencha os parametros do acordo.
-6. Use `Exportar PDF` para imprimir ou salvar a semi-proposta.
+6. Use `Gerar contrato PDF` para imprimir/salvar o contrato ou `Enviar para assinatura` para chamar a API.
+
+## Integracao com a API
+
+O front envia contratos para assinatura usando `multipart/form-data`.
+
+Por padrao, a URL usada e:
+
+```bash
+http://127.0.0.1:8000/api/signatures
+```
+
+Para alterar, crie um `.env` no projeto do front com:
+
+```bash
+VITE_SIGNATURE_API_URL=http://127.0.0.1:8000/api/signatures
+```
+
+Campos enviados:
+
+- `nome`
+- `email`
+- `telefone`
+- `mensagem` opcional
+- `pdf` com o contrato gerado no navegador
+
+Observacao: se o front e a API rodarem em portas diferentes, a API precisa liberar CORS para a origem do Vite, normalmente `http://127.0.0.1:5173`.
 
 ## Scripts
 
@@ -36,15 +65,18 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 4. Cada linha valida da tabela vira um ativo com `id`, `name`, `reference`, `dueDate` e `amount`.
 5. Todos os ativos encontrados entram selecionados por padrao.
 6. A semi-proposta e recalculada automaticamente sempre que a selecao ou os parametros mudam.
+7. O usuario complementa endereco, e-mail e unidade para montar o contrato.
+8. O contrato pode ser impresso/salvo ou enviado para assinatura pela API.
 
 ## Regras operacionais implementadas
 
 - a data do acordo e sempre a data atual;
 - a primeira parcela deve respeitar o minimo de `2` dias uteis a partir da data do acordo;
-- a taxa mensal e fixa em `2,2% a.m.` e nao pode ser editada na interface;
+- a taxa mensal inicial e `2,2% a.m.` e pode ser editada na interface;
 - a quantidade inicial sugerida e `15` parcelas;
-- nao existe entrada no fluxo atual;
-- a exportacao em PDF usa `window.print()` com o layout da tela.
+- a entrada e opcional e limitada ao valor base do acordo;
+- a geracao local usa impressao do navegador;
+- o envio para assinatura usa `html2pdf.js` para criar um `Blob` PDF e mandar para o backend.
 
 ## Regra de calculo
 
@@ -59,15 +91,18 @@ Aplicacao React com Vite para montar uma semi-proposta de acordo a partir do upl
 
 ## Estrutura relevante
 
-- [src/App.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/App.jsx): coordena upload, selecao e simulacao.
-- [src/services/debtPdfParser.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/services/debtPdfParser.js): leitura e extracao dos dados do PDF.
-- [src/lib/agreementCalculator.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/lib/agreementCalculator.js): regra principal de calculo financeiro.
-- [src/lib/installments.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/lib/installments.js): montagem do cronograma de parcelas.
-- [src/components/SearchPanel.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/components/SearchPanel.jsx): upload e grade de ativos extraidos.
-- [src/components/AgreementPanel.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/src/components/AgreementPanel.jsx): parametros, resumo da proposta e cronograma.
+- [src/App.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/App.jsx): coordena upload, selecao e simulacao.
+- [src/services/debtPdfParser.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/services/debtPdfParser.js): leitura e extracao dos dados do PDF.
+- [src/lib/agreementCalculator.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/lib/agreementCalculator.js): regra principal de calculo financeiro.
+- [src/lib/installments.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/lib/installments.js): montagem do cronograma de parcelas.
+- [src/lib/agreementDocument.js](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/lib/agreementDocument.js): monta os dados finais usados no contrato.
+- [src/components/SearchPanel.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/components/SearchPanel.jsx): upload e grade de ativos extraidos.
+- [src/components/AgreementPanel.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/components/AgreementPanel.jsx): parametros, resumo da proposta e cronograma.
+- [src/components/AgreementContract.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/components/AgreementContract.jsx): template visual do contrato final.
+- [src/components/CaseLibrary.jsx](/C:/Users/Coimbra/Desktop/Simulador%20de%20Acordos/SimuladorAcordos-main/src/components/CaseLibrary.jsx): biblioteca local de casos salvos.
 
 ## Observacoes
 
 - o parser atual foi feito para o modelo de PDF da planilha de debito usado pelo projeto;
-- hoje nao existe integracao com API ou backend;
+- a integracao com API ja existe no front, mas depende da API FastAPI estar rodando e configurada;
 - se o layout do PDF mudar, a logica de extracao em `src/services/debtPdfParser.js` provavelmente precisara ser ajustada.

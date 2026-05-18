@@ -9,13 +9,19 @@ export function AgreementPanel({
   installmentCountInput,
   monthlyRateInput,
   attorneyFeesAmountInput,
+  agreementMode,
+  legalCostsAmountInput,
   note,
   hasDownPayment,
   downPaymentAmount,
+  downPaymentDate,
   selectedAssets,
   simulation,
   searchDescription,
+  onSaveCase,
   onExportPdf,
+  onSendForSignature,
+  signatureRequestPending,
   onAgreementDateChange,
   onFirstInstallmentDateChange,
   onInstallmentCountChange,
@@ -24,10 +30,17 @@ export function AgreementPanel({
   onMonthlyRateBlur,
   onAttorneyFeesAmountChange,
   onAttorneyFeesBlur,
+  onAgreementModeChange,
+  onLegalCostsAmountChange,
+  onLegalCostsBlur,
   onDownPaymentToggle,
   onDownPaymentAmountChange,
+  onDownPaymentDateChange,
   onNoteChange,
 }) {
+  // O painel recebe tudo ja calculado pelo App e apenas renderiza/propaga edicoes.
+  const isJudicialAgreement = agreementMode === "judicial";
+
   return (
     <section className="panel panel--proposal">
       <div className="panel__header">
@@ -39,10 +52,26 @@ export function AgreementPanel({
           <button
             type="button"
             className="button button--ghost"
+            onClick={onSaveCase}
+            disabled={!simulation}
+          >
+            Salvar caso
+          </button>
+          <button
+            type="button"
+            className="button button--ghost"
             onClick={onExportPdf}
             disabled={!simulation}
           >
             Gerar contrato PDF
+          </button>
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={onSendForSignature}
+            disabled={!simulation || signatureRequestPending}
+          >
+            {signatureRequestPending ? "Enviando assinatura..." : "Enviar para assinatura"}
           </button>
         </div>
       </div>
@@ -105,6 +134,38 @@ export function AgreementPanel({
           </label>
 
           <div className="field field--checkbox">
+            <span>Tipo de acordo</span>
+            <label className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={agreementMode === "extrajudicial"}
+                onChange={() => onAgreementModeChange("extrajudicial")}
+              />
+              <span>Extrajudicial</span>
+            </label>
+            <label className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={isJudicialAgreement}
+                onChange={() => onAgreementModeChange("judicial")}
+              />
+              <span>Judicial</span>
+            </label>
+          </div>
+
+          <label className="field">
+            <span>Custas processuais (R$)</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={legalCostsAmountInput}
+              onChange={(event) => onLegalCostsAmountChange(event.target.value)}
+              onBlur={onLegalCostsBlur}
+              disabled={!isJudicialAgreement}
+            />
+          </label>
+
+          <div className="field field--checkbox">
             <span>Entrada opcional</span>
             <label className="checkbox-field">
               <input
@@ -124,6 +185,18 @@ export function AgreementPanel({
               step="0.01"
               value={downPaymentAmount}
               onChange={(event) => onDownPaymentAmountChange(event.target.value)}
+              disabled={!hasDownPayment}
+            />
+          </label>
+
+          <label className="field">
+            <span>Data da entrada</span>
+            <input
+              type="date"
+              min={agreementDate}
+              max={firstInstallmentDate}
+              value={downPaymentDate}
+              onChange={(event) => onDownPaymentDateChange(event.target.value)}
               disabled={!hasDownPayment}
             />
           </label>
@@ -171,6 +244,9 @@ export function AgreementPanel({
               highlight
             />
             <ResultCard label="Honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
+            {simulation.legalCostsAmount > 0 && (
+              <ResultCard label="Custas" value={formatCurrency(simulation.legalCostsAmount)} />
+            )}
             <ResultCard label="Entrada" value={formatCurrency(simulation.downPayment)} />
             <ResultCard label="Saldo parcelado" value={formatCurrency(simulation.financedBalance)} />
             <ResultCard label="Parcela (Price)" value={formatCurrency(simulation.installmentAmount)} />
@@ -186,6 +262,13 @@ export function AgreementPanel({
               <div className="info-grid">
                 <InfoPill label="Data do acordo" value={formatDate(simulation.agreementDate)} />
                 <InfoPill label="1a parcela" value={formatDate(simulation.firstInstallmentDate)} />
+                <InfoPill
+                  label="Tipo de acordo"
+                  value={isJudicialAgreement ? "Judicial" : "Extrajudicial"}
+                />
+                {simulation.legalCostsAmount > 0 && (
+                  <InfoPill label="Custas processuais" value={formatCurrency(simulation.legalCostsAmount)} />
+                )}
                 <InfoPill label="Divida total" value={formatCurrency(simulation.totalDebt)} />
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
                 <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
@@ -193,6 +276,9 @@ export function AgreementPanel({
                 <InfoPill label="Valor dos honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
                 <InfoPill label="Base do acordo" value={formatCurrency(simulation.agreementBaseAmount)} />
                 <InfoPill label="Entrada" value={formatCurrency(simulation.downPayment)} />
+                {simulation.downPaymentEvent && (
+                  <InfoPill label="Data da entrada" value={formatDate(simulation.downPaymentDate)} />
+                )}
                 <InfoPill label="Saldo corrigido" value={formatCurrency(simulation.correctedBalance)} />
                 <InfoPill label="Total pago" value={formatCurrency(simulation.totalPaid)} />
                 <InfoPill label="Juros do parcelamento" value={formatCurrency(simulation.financedInterest)} />
@@ -208,6 +294,7 @@ export function AgreementPanel({
               </div>
               <ul className="selected-assets-list">
                 {selectedAssets.map((asset) => (
+                  // Lista resumida dos ativos que entraram na base do acordo.
                   <li key={asset.id}>
                     <span className="selected-assets-list__label">Ativo</span>
                     <strong>{asset.id}</strong>
@@ -230,8 +317,10 @@ export function AgreementPanel({
             </div>
             <div className="proposal-print-summary__content">
                 <p>
-                Divida consolidada em {formatCurrency(simulation.totalDebt)}, com honorarios
-                advocaticios de {formatCurrency(simulation.attorneyFeesAmount)} e
+                Divida consolidada em {formatCurrency(simulation.totalDebt)}
+                {simulation.legalCostsAmount > 0
+                  ? `, incluindo custas processuais de ${formatCurrency(simulation.legalCostsAmount)}`
+                  : ""}, com honorarios advocaticios de {formatCurrency(simulation.attorneyFeesAmount)} e
                 {simulation.downPayment > 0
                   ? ` entrada de ${formatCurrency(simulation.downPayment)} e`
                   : ""}{" "}
@@ -249,21 +338,54 @@ export function AgreementPanel({
           <div className="proposal-schedule">
             <div className="proposal-schedule__header">
               <h4>Cronograma de parcelas</h4>
-              <p>Parcelas fixas no modelo Price com pagamento da 1a parcela no inicio do periodo.</p>
+              <p>
+                {simulation.downPaymentEvent
+                  ? "Entrada destacada e saldo remanescente parcelado no modelo Price."
+                  : "Parcelas fixas no modelo Price com pagamento da 1a parcela no inicio do periodo."}
+              </p>
             </div>
+
+            {simulation.downPaymentEvent && (
+              <div className="table-wrap entry-table-wrap">
+                <table className="schedule-table schedule-table--entry">
+                  <thead>
+                    <tr>
+                      <th>Descricao</th>
+                      <th>Data</th>
+                      <th>Saldo inicial</th>
+                      <th>Juros</th>
+                      <th>Pagamento</th>
+                      <th>Amortizacao</th>
+                      <th>Saldo final</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Entrada</td>
+                      <td>{formatDate(simulation.downPaymentEvent.dueDate)}</td>
+                      <td>{formatCurrency(simulation.downPaymentEvent.startingBalance)}</td>
+                      <td>{formatCurrency(simulation.downPaymentEvent.interest)}</td>
+                      <td>{formatCurrency(simulation.downPaymentEvent.paymentAmount)}</td>
+                      <td>{formatCurrency(simulation.downPaymentEvent.amortization)}</td>
+                      <td>{formatCurrency(simulation.downPaymentEvent.remainingBalance)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="table-wrap">
               <table className="schedule-table">
                 <thead>
                   <tr>
-                    <th>Parcela</th>
-                    <th>Vencimento</th>
-                    <th>Saldo base</th>
-                    <th>Juros</th>
-                    <th>Saldo antes do pgto</th>
-                    <th>Amortizacao</th>
-                    <th>Parcela fixa</th>
-                    <th>Saldo final</th>
+                    <th title="Parcela">Parc.</th>
+                    <th title="Vencimento">Venc.</th>
+                    <th title="Saldo base">Base</th>
+                    <th title="Juros">Juros</th>
+                    <th title="Saldo antes do pagamento">Antes</th>
+                    <th title="Amortizacao">Amort.</th>
+                    <th title="Parcela fixa">Parcela</th>
+                    <th title="Saldo final">Final</th>
                   </tr>
                 </thead>
                 <tbody>

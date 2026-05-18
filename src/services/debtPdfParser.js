@@ -78,6 +78,7 @@ function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
     unit: "",
     totalDebt: "",
     attorneyFeesAmount: extractAttorneyFeesAmount(lines),
+    legalCostsAmount: extractLegalCostsAmount(lines),
     parserSummary: {
       skippedLines: assetExtraction.skippedLines.length
     }
@@ -323,6 +324,40 @@ function extractAttorneyFeesAmount(lines) {
   }
 
   return total;
+}
+
+// Captura o subtotal de Vlr Final da secao de custas processuais para o modo Judicial.
+function extractLegalCostsAmount(lines) {
+  let isLegalCostsSection = false;
+
+  for (const line of lines) {
+    const normalizedLine = normalizeSearchText(line).toUpperCase();
+    if (normalizedLine.includes("CUSTAS PROCESSUAIS")) {
+      isLegalCostsSection = true;
+      continue;
+    }
+
+    if (!isLegalCostsSection) {
+      continue;
+    }
+
+    if (normalizedLine.startsWith("SUB TOTAL")) {
+      const currencyMatches = line.match(/-?\d[\d.]*,\d{2}/g) ?? [];
+      const amountToken = currencyMatches.at(-2) ?? currencyMatches.at(-1) ?? "";
+      return amountToken ? parseBrazilianNumber(amountToken) : 0;
+    }
+
+    if (
+      normalizedLine.includes("TOTAL GERAL") ||
+      normalizedLine.includes("COTAS EM ANALISE") ||
+      normalizedLine.startsWith("HONORARIOS") ||
+      normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")
+    ) {
+      isLegalCostsSection = false;
+    }
+  }
+
+  return 0;
 }
 
 // Captura o subtotal de Vlr Final apenas da secao de debitos condominiais, sem custas.

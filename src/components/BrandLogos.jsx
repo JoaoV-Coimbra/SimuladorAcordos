@@ -9,6 +9,7 @@ export function BrandLogos() {
 }
 
 function G5PartnersLogo() {
+  // SVG inline evita depender de uma imagem externa para uma marca simples no topo.
   return (
     <svg
       viewBox="0 0 260 70"
@@ -42,6 +43,7 @@ function G5PartnersLogo() {
 }
 
 function SoficoLogo() {
+  // Mantem a segunda marca no mesmo sistema visual do logo G5.
   return (
     <svg
       viewBox="0 0 260 70"

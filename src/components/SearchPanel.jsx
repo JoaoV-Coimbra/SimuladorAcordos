@@ -11,6 +11,7 @@ export function SearchPanel({
   onToggleAsset,
   onToggleAll
 }) {
+  // Esses flags controlam os estados vazios e o comportamento do botao de selecao total.
   const hasAssets = assets.length > 0;
   const allSelected = hasAssets && selectedAssetIds.size === assets.length;
 
@@ -18,7 +19,7 @@ export function SearchPanel({
     <section className="panel panel--search">
       <div className="panel__header">
         <h2>Upload da Planilha Debito</h2>
-        <p>Leitura automatica dos IDs, Vlr Final e honorarios do relatorio</p>
+        <p>Leitura automatica dos IDs, Vlr Final, honorarios e custas do relatorio</p>
       </div>
 
       <div className="upload-box">
@@ -34,7 +35,7 @@ export function SearchPanel({
 
         <div className="upload-box__meta">
           <strong>{uploadedFileName || "Nenhum arquivo carregado"}</strong>
-          <span>O sistema usa o Vlr Final dos debitos condominiais e ignora custas processuais.</span>
+          <span>Extrajudicial usa apenas os debitos condominiais; Judicial soma as custas processuais.</span>
         </div>
       </div>
 
@@ -64,6 +65,10 @@ export function SearchPanel({
             <span>Honorarios</span>
             <strong>{formatCurrency(reportMetadata.attorneyFeesAmount || 0)}</strong>
           </div>
+          <div>
+            <span>Custas processuais</span>
+            <strong>{formatCurrency(reportMetadata.legalCostsAmount || 0)}</strong>
+          </div>
         </div>
       )}
 
@@ -89,19 +94,19 @@ export function SearchPanel({
           </div>
 
           <div className="table-wrap">
-            <table>
+            <table className="assets-table">
               <thead>
                 <tr>
                   <th></th>
                   <th>ID</th>
-                  <th>Ativo</th>
                   <th>Referencia</th>
                   <th>Vencimento</th>
                   <th>Valor</th>
                 </tr>
               </thead>
               <tbody>
-                {assets.map((asset) => {
+          {assets.map((asset) => {
+                  // A selecao fica no App; o painel apenas reflete e dispara a alternancia.
                   const checked = selectedAssetIds.has(asset.id);
                   return (
                     <tr className={checked ? "selected" : ""} key={asset.id}>
@@ -113,7 +118,6 @@ export function SearchPanel({
                           aria-label={`Selecionar ${asset.id}`}
                         />
                       </td>
-                      <td>{asset.id}</td>
                       <td>{asset.id}</td>
                       <td>{asset.reference}</td>
                       <td>{formatDate(asset.dueDate)}</td>

@@ -45,6 +45,7 @@ const mockAssetsDatabase = [
 
 // Simula a consulta de ativos pendentes e concentra o ponto de troca futura pela API real.
 export async function fetchPendingAssets(searchType, rawSearchValue) {
+  // Normalizacao evita diferenca entre CPF pontuado e sem pontuacao ou unidade em caixa distinta.
   const searchValue = normalizeLookupValue(rawSearchValue, searchType);
 
   // Troque este mock pelo fetch da API quando o endpoint estiver definido.

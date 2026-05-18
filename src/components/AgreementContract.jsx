@@ -2,6 +2,7 @@ import g5JusLogo from "../assets/g5jus-logo-from-docx.png";
 
 // Renderiza o contrato em formato de documento para impressão e salvamento em PDF.
 export function AgreementContract({ documentData }) {
+  // Sem dados calculados ainda, o template fica fora do DOM.
   if (!documentData) {
     return null;
   }
