@@ -4,6 +4,7 @@ import { roundCurrency } from "./money.js";
 // Gera a tabela detalhada das parcelas em um fluxo Price com pagamento no inicio do periodo.
 export function buildInstallmentSchedule({
   correctedBalance,
+  scheduleStartingBalance = correctedBalance,
   monthlyRate,
   installmentCount,
   firstInstallmentDate,
@@ -12,10 +13,10 @@ export function buildInstallmentSchedule({
   firstInstallmentInterestExact = null,
 }) {
   const schedule = [];
-  let carriedBalance = correctedBalance;
+  let carriedBalance = scheduleStartingBalance;
 
   for (let installmentNumber = 1; installmentNumber <= installmentCount; installmentNumber += 1) {
-    // A primeira parcela nao recebe juros mensais porque o modelo e Price Pre.
+    // A primeira parcela so recebe juros quando vem de um saldo final de entrada.
     const isFirstInstallment = installmentNumber === 1;
     const startingBalance = carriedBalance;
     const interestExact = isFirstInstallment && firstInstallmentInterestExact !== null

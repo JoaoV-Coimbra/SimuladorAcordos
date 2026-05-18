@@ -153,17 +153,18 @@ export function AgreementPanel({
             </label>
           </div>
 
-          <label className="field">
-            <span>Custas processuais (R$)</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={legalCostsAmountInput}
-              onChange={(event) => onLegalCostsAmountChange(event.target.value)}
-              onBlur={onLegalCostsBlur}
-              disabled={!isJudicialAgreement}
-            />
-          </label>
+          {isJudicialAgreement && (
+            <label className="field">
+              <span>Custas processuais (R$)</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={legalCostsAmountInput}
+                onChange={(event) => onLegalCostsAmountChange(event.target.value)}
+                onBlur={onLegalCostsBlur}
+              />
+            </label>
+          )}
 
           <div className="field field--checkbox">
             <span>Entrada opcional</span>
@@ -177,29 +178,31 @@ export function AgreementPanel({
             </label>
           </div>
 
-          <label className="field">
-            <span>Valor da entrada</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={downPaymentAmount}
-              onChange={(event) => onDownPaymentAmountChange(event.target.value)}
-              disabled={!hasDownPayment}
-            />
-          </label>
+          {hasDownPayment && (
+            <>
+              <label className="field">
+                <span>Valor da entrada</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={downPaymentAmount}
+                  onChange={(event) => onDownPaymentAmountChange(event.target.value)}
+                />
+              </label>
 
-          <label className="field">
-            <span>Data da entrada</span>
-            <input
-              type="date"
-              min={agreementDate}
-              max={firstInstallmentDate}
-              value={downPaymentDate}
-              onChange={(event) => onDownPaymentDateChange(event.target.value)}
-              disabled={!hasDownPayment}
-            />
-          </label>
+              <label className="field">
+                <span>Data da entrada</span>
+                <input
+                  type="date"
+                  min={agreementDate}
+                  max={firstInstallmentDate}
+                  value={downPaymentDate}
+                  onChange={(event) => onDownPaymentDateChange(event.target.value)}
+                />
+              </label>
+            </>
+          )}
 
           <label className="field">
             <span>Observacao comercial</span>

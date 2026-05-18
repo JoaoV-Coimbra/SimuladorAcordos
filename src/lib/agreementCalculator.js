@@ -1,5 +1,5 @@
 import {
-  countBusinessDaysInclusive,
+  countBusinessDaysBetween,
 } from "./dates.js";
 import { buildInstallmentSchedule, buildOpeningBalanceRow } from "./installments.js";
 import { roundCurrency } from "./money.js";
@@ -35,7 +35,7 @@ export function calculateAgreement({
   const hasDownPayment = normalizedDownPayment > 0;
   const effectiveDownPaymentDate = hasDownPayment ? downPaymentDate : agreementDate;
   const entryProrataDays = hasDownPayment
-    ? countBusinessDaysInclusive(agreementDate, effectiveDownPaymentDate)
+    ? countBusinessDaysBetween(agreementDate, effectiveDownPaymentDate)
     : 0;
   const downPaymentInterest = hasDownPayment
     ? roundCurrency(
@@ -56,25 +56,36 @@ export function calculateAgreement({
     ? roundCurrency(Math.max(downPaymentBalanceBeforePayment - normalizedDownPayment, 0))
     : agreementBaseAmount;
 
-  // Sem entrada, o modelo segue Price Pre com pro rata ate a primeira parcela.
-  const prorataDays = hasDownPayment
-    ? entryProrataDays
-    : countBusinessDaysInclusive(agreementDate, firstInstallmentDate);
-  const pricePrePeriod = hasDownPayment ? 0 : prorataDays;
+  // Com entrada, a amortizacao da entrada fica isolada e o fluxo Price parte do saldo final.
+  const installmentProrataStartDate = hasDownPayment
+    ? effectiveDownPaymentDate
+    : agreementDate;
+  const prorataDays = countBusinessDaysBetween(
+    installmentProrataStartDate,
+    firstInstallmentDate,
+  );
+  const pricePrePeriod = prorataDays;
   const financedBalance = hasDownPayment
     ? balanceAfterDownPayment
     : roundCurrency(Math.max(agreementBaseAmount, 0));
-  const correctedBalance = hasDownPayment
-    ? financedBalance
-    : roundCurrency(
-        financedBalance *
-          (
-            Math.pow(
-              1 + monthlyRate,
-              prorataDays / BUSINESS_DAYS_IN_FINANCIAL_MONTH,
-            )
-          ),
-      );
+  const firstInstallmentInterestExact = hasDownPayment
+    ? financedBalance *
+        (
+          Math.pow(
+            1 + monthlyRate,
+            prorataDays / BUSINESS_DAYS_IN_FINANCIAL_MONTH,
+          ) - 1
+        )
+    : null;
+  const correctedBalance = roundCurrency(
+    financedBalance *
+      (
+        Math.pow(
+          1 + monthlyRate,
+          prorataDays / BUSINESS_DAYS_IN_FINANCIAL_MONTH,
+        )
+      ),
+  );
 
   let installmentAmountExact = 0;
   if (installmentCount > 0) {
@@ -89,16 +100,18 @@ export function calculateAgreement({
 
   const installmentSchedule = buildInstallmentSchedule({
     correctedBalance,
+    scheduleStartingBalance: hasDownPayment ? financedBalance : correctedBalance,
     monthlyRate,
     installmentCount,
     firstInstallmentDate,
     installmentAmountExact,
     paymentTiming: "advance",
+    firstInstallmentInterestExact,
   });
   const schedule = hasDownPayment
     ? [
         buildOpeningBalanceRow({
-          balance: correctedBalance,
+          balance: financedBalance,
           dueDate: effectiveDownPaymentDate,
         }),
         ...installmentSchedule,
@@ -110,7 +123,7 @@ export function calculateAgreement({
     normalizedDownPayment + installmentTotal,
   );
   const financedInterest = hasDownPayment
-    ? roundCurrency(installmentTotal - correctedBalance)
+    ? roundCurrency(installmentTotal - financedBalance)
     : roundCurrency(totalPaid - normalizedDownPayment - financedBalance);
   const totalInterest = roundCurrency(totalPaid - normalizedTotalDebt);
   const interestPercent = financedBalance > 0 ? (financedInterest / financedBalance) * 100 : 0;
