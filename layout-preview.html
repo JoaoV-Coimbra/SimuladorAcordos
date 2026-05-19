@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview de Layout - Simulador de Acordos</title>
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --panel: #ffffff;
+        --panel-soft: #f8fafc;
+        --ink: #17202a;
+        --muted: #667085;
+        --line: #e4e8ef;
+        --brand: #175c80;
+        --brand-strong: #0e405d;
+        --green: #1f7a63;
+        --green-soft: #e8f4ef;
+        --amber: #a15c07;
+        --amber-soft: #fff6e6;
+        --red: #b42318;
+        --shadow: 0 18px 48px rgba(18, 32, 46, 0.08);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background: var(--bg);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 264px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: #fbfcfe;
+        padding: 22px 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 26px;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        color: #fff;
+        background: var(--brand);
+        font-weight: 800;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.15;
+      }
+
+      .brand p,
+      .section-title,
+      .muted {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .brand p {
+        margin-top: 3px;
+        font-size: 0.78rem;
+      }
+
+      .section-title {
+        margin: 22px 0 10px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .nav {
+        display: grid;
+        gap: 6px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 38px;
+        border-radius: 8px;
+        padding: 0 10px;
+        color: #344054;
+        font-size: 0.88rem;
+        font-weight: 650;
+      }
+
+      .nav-item.is-active {
+        color: var(--brand-strong);
+        background: #e9f3f8;
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .case-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .case-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .case-card strong {
+        display: block;
+        font-size: 0.88rem;
+      }
+
+      .case-card span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      .main {
+        padding: 22px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .title h2 {
+        margin: 0;
+        font-size: 1.45rem;
+        letter-spacing: 0;
+      }
+
+      .title p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 13px;
+        background: #fff;
+        color: #344054;
+        font-weight: 750;
+        cursor: default;
+      }
+
+      .btn.primary {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.18fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-header h3 {
+        margin: 0;
+        font-size: 0.98rem;
+      }
+
+      .panel-header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .panel-body {
+        padding: 18px;
+      }
+
+      .upload {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 13px;
+        align-items: center;
+        border: 1px dashed #abc6d8;
+        border-radius: 10px;
+        padding: 14px;
+        background: #f6fbfd;
+      }
+
+      .upload-icon,
+      .metric-icon {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        color: var(--brand);
+        background: #e7f1f7;
+        font-weight: 900;
+      }
+
+      .upload strong {
+        display: block;
+        font-size: 0.9rem;
+      }
+
+      .upload span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .mini {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 11px;
+        background: var(--panel-soft);
+      }
+
+      .mini span,
+      .field span,
+      th {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .mini strong {
+        display: block;
+        margin-top: 5px;
+        overflow: hidden;
+        font-size: 0.88rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .table-wrap {
+        margin-top: 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      td {
+        font-size: 0.86rem;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .check {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        background: var(--brand);
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 26px;
+        border-radius: 999px;
+        padding: 0 9px;
+        color: var(--green);
+        background: var(--green-soft);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding: 18px;
+        background: linear-gradient(180deg, #ffffff, #f9fbfd);
+      }
+
+      .hero h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .hero p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .hero-value {
+        text-align: right;
+      }
+
+      .hero-value span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .hero-value strong {
+        display: block;
+        margin-top: 4px;
+        color: var(--brand-strong);
+        font-size: 1.55rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .mode-row {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.85fr) minmax(180px, 0.65fr);
+        gap: 12px;
+        padding: 0 18px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .entry-row {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.7fr) minmax(180px, 0.7fr);
+        gap: 12px;
+        padding: 0 18px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 4px;
+        background: var(--panel-soft);
+      }
+
+      .segment {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 800;
+      }
+
+      .segment.is-active {
+        color: #fff;
+        background: var(--brand);
+        box-shadow: 0 6px 14px rgba(23, 92, 128, 0.18);
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .field input {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 10px;
+        color: var(--ink);
+        background: #fff;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        padding: 18px;
+      }
+
+      .metric {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 11px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 700;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.98rem;
+      }
+
+      .wide {
+        margin: 0 18px 18px;
+      }
+
+      .schedule {
+        padding: 0;
+      }
+
+      .schedule .table-wrap {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .footer-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 1px solid var(--line);
+        padding: 14px 18px;
+        background: #fbfcfe;
+      }
+
+      .warning {
+        border: 1px solid #f1d09b;
+        border-radius: 10px;
+        padding: 12px;
+        color: var(--amber);
+        background: var(--amber-soft);
+        font-size: 0.84rem;
+        font-weight: 650;
+      }
+
+      @media (max-width: 1180px) {
+        .shell,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .nav,
+        .case-list {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .main,
+        .sidebar {
+          padding: 16px;
+        }
+
+        .topbar,
+        .hero,
+        .footer-strip {
+          display: grid;
+        }
+
+        .actions,
+        .hero-value {
+          justify-content: stretch;
+          text-align: left;
+        }
+
+        .form-grid,
+        .mode-row,
+        .entry-row,
+        .metric-grid,
+        .summary-grid,
+        .nav,
+        .case-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">G5</div>
+          <div>
+            <h1>Simulador de Acordos</h1>
+            <p>Preview visual</p>
+          </div>
+        </div>
+
+        <p class="section-title">Fluxo</p>
+        <nav class="nav" aria-label="Fluxo do simulador">
+          <div class="nav-item is-active"><span class="dot"></span>PDF carregado</div>
+          <div class="nav-item"><span class="dot"></span>Simulação</div>
+          <div class="nav-item"><span class="dot"></span>Contrato</div>
+        </nav>
+
+        <p class="section-title">Casos recentes</p>
+        <div class="case-list">
+          <article class="case-card">
+            <strong>Maria Oliveira</strong>
+            <span>UND 77303 · R$ 18.944,20</span>
+          </article>
+          <article class="case-card">
+            <strong>Condomínio Barra Sul</strong>
+            <span>BL 02 AP 104 · R$ 9.810,44</span>
+          </article>
+          <article class="case-card">
+            <strong>João Santos</strong>
+            <span>Casa 18 · R$ 27.502,10</span>
+          </article>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="title">
+            <h2>Calculadora de acordo por PDF</h2>
+            <p>Layout alternativo com painel mais denso, limpo e operacional.</p>
+          </div>
+          <div class="actions">
+            <button class="btn">Salvar caso</button>
+            <button class="btn">Gerar PDF</button>
+            <button class="btn primary">Enviar assinatura</button>
+          </div>
+        </header>
+
+        <div class="layout">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Origem da dívida</h3>
+                <p>Planilha lida automaticamente</p>
+              </div>
+              <span class="status"><span class="dot"></span>12 ativos</span>
+            </div>
+            <div class="panel-body">
+              <div class="upload">
+                <div class="upload-icon">PDF</div>
+                <div>
+                  <strong>planilha-debito-maio.pdf</strong>
+                  <span>Débitos, honorários e custas extraídos do relatório.</span>
+                </div>
+              </div>
+
+              <div class="summary-grid">
+                <div class="mini">
+                  <span>Condomínio</span>
+                  <strong>Condomínio Jardim Atlântico</strong>
+                </div>
+                <div class="mini">
+                  <span>Unidade</span>
+                  <strong>UND 77303</strong>
+                </div>
+                <div class="mini">
+                  <span>Proprietário</span>
+                  <strong>Maria Oliveira da Silva</strong>
+                </div>
+                <div class="mini">
+                  <span>Total relatório</span>
+                  <strong>R$ 15.284,60</strong>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>ID</th>
+                      <th>Vencimento</th>
+                      <th>Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><div class="check"></div></td>
+                      <td>ATV-00931</td>
+                      <td>10/01/2025</td>
+                      <td>R$ 1.280,40</td>
+                    </tr>
+                    <tr>
+                      <td><div class="check"></div></td>
+                      <td>ATV-01028</td>
+                      <td>10/02/2025</td>
+                      <td>R$ 1.311,22</td>
+                    </tr>
+                    <tr>
+                      <td><div class="check"></div></td>
+                      <td>ATV-01102</td>
+                      <td>10/03/2025</td>
+                      <td>R$ 1.305,18</td>
+                    </tr>
+                    <tr>
+                      <td><div class="check"></div></td>
+                      <td>ATV-01210</td>
+                      <td>10/04/2025</td>
+                      <td>R$ 1.334,91</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="hero">
+              <div>
+                <h3>Semi-proposta de acordo</h3>
+                <p>Price antecipado, pro rata por dias úteis e entrada opcional destacada.</p>
+              </div>
+              <div class="hero-value">
+                <span>Total estimado</span>
+                <strong>R$ 21.672,84</strong>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label class="field">
+                <span>Data acordo</span>
+                <input value="18/05/2026" />
+              </label>
+              <label class="field">
+                <span>1ª parcela</span>
+                <input value="20/05/2026" />
+              </label>
+              <label class="field">
+                <span>Taxa a.m.</span>
+                <input value="2,20%" />
+              </label>
+              <label class="field">
+                <span>Parcelas</span>
+                <input value="15" />
+              </label>
+            </div>
+
+            <div class="mode-row">
+              <label class="field">
+                <span>Tipo de acordo</span>
+                <div class="segmented" role="group" aria-label="Tipo de acordo">
+                  <div class="segment is-active">Extrajudicial</div>
+                  <div class="segment">Judicial</div>
+                </div>
+              </label>
+              <label class="field">
+                <span>Custas processuais</span>
+                <input value="R$ 0,00" />
+              </label>
+              <label class="field">
+                <span>Base usada</span>
+                <input value="Débitos + honorários" />
+              </label>
+            </div>
+
+            <div class="entry-row">
+              <label class="field">
+                <span>Entrada</span>
+                <div class="segmented" role="group" aria-label="Entrada no acordo">
+                  <div class="segment">Sem entrada</div>
+                  <div class="segment is-active">Com entrada</div>
+                </div>
+              </label>
+              <label class="field">
+                <span>Valor da entrada</span>
+                <input value="R$ 1.500,00" />
+              </label>
+              <label class="field">
+                <span>Data da entrada</span>
+                <input value="18/05/2026" />
+              </label>
+            </div>
+
+            <div class="metric-grid">
+              <article class="metric">
+                <div class="metric-icon">$</div>
+                <div>
+                  <span>Saldo corrigido</span>
+                  <strong>R$ 17.421,10</strong>
+                </div>
+              </article>
+              <article class="metric">
+                <div class="metric-icon">%</div>
+                <div>
+                  <span>Honorários</span>
+                  <strong>R$ 2.292,69</strong>
+                </div>
+              </article>
+              <article class="metric">
+                <div class="metric-icon">+</div>
+                <div>
+                  <span>Entrada</span>
+                  <strong>R$ 1.500,00</strong>
+                </div>
+              </article>
+              <article class="metric">
+                <div class="metric-icon">#</div>
+                <div>
+                  <span>Parcela</span>
+                  <strong>R$ 1.344,86</strong>
+                </div>
+              </article>
+            </div>
+
+            <div class="wide warning">
+              Judicial soma custas processuais automaticamente; extrajudicial usa apenas débitos e honorários.
+            </div>
+
+            <div class="schedule">
+              <div class="panel-header">
+                <div>
+                  <h3>Cronograma</h3>
+                  <p>Visão compacta para conferência antes do contrato.</p>
+                </div>
+                <span class="status">Price pré</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Parc.</th>
+                      <th>Venc.</th>
+                      <th>Base</th>
+                      <th>Juros</th>
+                      <th>Parcela</th>
+                      <th>Saldo final</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>20/05/2026</td>
+                      <td>R$ 15.921,10</td>
+                      <td>R$ 0,00</td>
+                      <td>R$ 1.344,86</td>
+                      <td>R$ 14.576,24</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>20/06/2026</td>
+                      <td>R$ 14.576,24</td>
+                      <td>R$ 320,68</td>
+                      <td>R$ 1.344,86</td>
+                      <td>R$ 13.552,06</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>20/07/2026</td>
+                      <td>R$ 13.552,06</td>
+                      <td>R$ 298,15</td>
+                      <td>R$ 1.344,86</td>
+                      <td>R$ 12.505,35</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="footer-strip">
+                <p class="muted">Contrato pronto para complementar endereço, e-mail e unidade.</p>
+                <button class="btn primary">Continuar</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

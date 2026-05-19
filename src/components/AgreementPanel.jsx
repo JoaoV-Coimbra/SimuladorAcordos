@@ -133,24 +133,24 @@ export function AgreementPanel({
             />
           </label>
 
-          <div className="field field--checkbox">
+          <div className="field field--segmented">
             <span>Tipo de acordo</span>
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                checked={agreementMode === "extrajudicial"}
-                onChange={() => onAgreementModeChange("extrajudicial")}
-              />
-              <span>Extrajudicial</span>
-            </label>
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                checked={isJudicialAgreement}
-                onChange={() => onAgreementModeChange("judicial")}
-              />
-              <span>Judicial</span>
-            </label>
+            <div className="segmented-control" role="group" aria-label="Tipo de acordo">
+              <button
+                type="button"
+                className={`segment-button ${agreementMode === "extrajudicial" ? "is-active" : ""}`}
+                onClick={() => onAgreementModeChange("extrajudicial")}
+              >
+                Extrajudicial
+              </button>
+              <button
+                type="button"
+                className={`segment-button ${isJudicialAgreement ? "is-active" : ""}`}
+                onClick={() => onAgreementModeChange("judicial")}
+              >
+                Judicial
+              </button>
+            </div>
           </div>
 
           {isJudicialAgreement && (
@@ -166,16 +166,24 @@ export function AgreementPanel({
             </label>
           )}
 
-          <div className="field field--checkbox">
-            <span>Entrada opcional</span>
-            <label className="checkbox-field">
-              <input
-                type="checkbox"
-                checked={hasDownPayment}
-                onChange={(event) => onDownPaymentToggle(event.target.checked)}
-              />
-              <span>Usar entrada no acordo</span>
-            </label>
+          <div className="field field--segmented">
+            <span>Entrada</span>
+            <div className="segmented-control" role="group" aria-label="Entrada no acordo">
+              <button
+                type="button"
+                className={`segment-button ${!hasDownPayment ? "is-active" : ""}`}
+                onClick={() => onDownPaymentToggle(false)}
+              >
+                Sem entrada
+              </button>
+              <button
+                type="button"
+                className={`segment-button ${hasDownPayment ? "is-active" : ""}`}
+                onClick={() => onDownPaymentToggle(true)}
+              >
+                Com entrada
+              </button>
+            </div>
           </div>
 
           {hasDownPayment && (

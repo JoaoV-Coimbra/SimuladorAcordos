@@ -688,86 +688,101 @@ export function App() {
   return (
     <>
       <main className="app-shell">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">Simulador Web</p>
-            <h1>Calculadora de Acordo por PDF</h1>
+        <aside className="app-sidebar">
+          <div className="sidebar-brand">
+            <div className="sidebar-brand__mark">G5</div>
+            <div>
+              <strong>Simulador de Acordos</strong>
+              <span>Calculadora por PDF</span>
+            </div>
           </div>
-          <div className="topbar__meta">
-            <BrandLogos />
-            <strong>Leitura automatica de debitos</strong>
-          </div>
-        </header>
 
-        <div className="app-layout">
-          <aside className="app-sidebar">
-            <CaseLibrary
-              cases={savedCases}
-              activeCaseId={activeCaseId}
-              onLoadCase={handleLoadCase}
-              onPinCase={handlePinCase}
-              onRenameCase={handleRenameCase}
-              onDeleteCase={handleDeleteCase}
-            />
-          </aside>
+          <nav className="sidebar-flow" aria-label="Fluxo do simulador">
+            <span className={assets.length ? "is-active" : ""}>PDF carregado</span>
+            <span className={simulation ? "is-active" : ""}>Simulação</span>
+            <span className={contractDocumentData ? "is-active" : ""}>Contrato</span>
+          </nav>
+
+          <CaseLibrary
+            cases={savedCases}
+            activeCaseId={activeCaseId}
+            onLoadCase={handleLoadCase}
+            onPinCase={handlePinCase}
+            onRenameCase={handleRenameCase}
+            onDeleteCase={handleDeleteCase}
+          />
+        </aside>
+
+        <section className="app-main">
+          <header className="topbar">
+            <div>
+              <p className="eyebrow">Simulador Web</p>
+              <h1>Calculadora de Acordo por PDF</h1>
+              <p>Leitura automática, simulação financeira e contrato em um só fluxo.</p>
+            </div>
+            <div className="topbar__meta">
+              <BrandLogos />
+              <strong>Leitura automatica de debitos</strong>
+            </div>
+          </header>
 
           <div className="workspace">
-            <SearchPanel
-              assets={assets}
-              selectedAssetIds={selectedAssetIds}
-              statusMessage={statusMessage}
-              uploadedFileName={uploadedFileName}
-              reportMetadata={reportMetadata}
-              onFileUpload={handleFileUpload}
-              onToggleAsset={handleToggleAsset}
-              onToggleAll={handleToggleAll}
-            />
+          <SearchPanel
+            assets={assets}
+            selectedAssetIds={selectedAssetIds}
+            statusMessage={statusMessage}
+            uploadedFileName={uploadedFileName}
+            reportMetadata={reportMetadata}
+            onFileUpload={handleFileUpload}
+            onToggleAsset={handleToggleAsset}
+            onToggleAll={handleToggleAll}
+          />
 
-            <AgreementPanel
-              agreementDate={agreementDate}
-              firstInstallmentDate={normalizedFirstInstallmentDate}
-              minimumFirstInstallmentDate={minimumFirstInstallmentDate}
-              installmentCount={installmentCount}
-              installmentCountInput={installmentCountInput}
-              monthlyRateInput={monthlyRateInput}
-              attorneyFeesAmountInput={attorneyFeesAmountInput}
-              agreementMode={agreementMode}
-              legalCostsAmountInput={legalCostsAmountInput}
-              note={note}
-              hasDownPayment={hasDownPayment}
-              downPaymentAmount={downPaymentAmount}
-              downPaymentDate={normalizedDownPaymentDate}
-              selectedAssets={selectedAssets}
-              simulation={simulation}
-              searchDescription={searchDescription}
-              onSaveCase={handleSaveCase}
-              onExportPdf={handleExportPdf}
-              onSendForSignature={handleSendForSignature}
-              signatureRequestPending={signatureRequestPending}
-              onAgreementDateChange={handleAgreementDateChange}
-              onFirstInstallmentDateChange={setFirstInstallmentDate}
-              onInstallmentCountChange={handleInstallmentCountChange}
-              onInstallmentCountBlur={handleInstallmentCountBlur}
-              onMonthlyRateChange={setMonthlyRateInput}
-              onMonthlyRateBlur={() =>
-                setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
-              }
-              onAttorneyFeesAmountChange={setAttorneyFeesAmountInput}
-              onAttorneyFeesBlur={() =>
-                setAttorneyFeesAmountInput(formatEditableMoney(attorneyFeesAmount))
-              }
-              onAgreementModeChange={setAgreementMode}
-              onLegalCostsAmountChange={setLegalCostsAmountInput}
-              onLegalCostsBlur={() =>
-                setLegalCostsAmountInput(formatEditableMoney(legalCostsAmount))
-              }
-              onDownPaymentToggle={handleDownPaymentToggle}
-              onDownPaymentAmountChange={handleDownPaymentAmountChange}
-              onDownPaymentDateChange={handleDownPaymentDateChange}
-              onNoteChange={setNote}
-            />
+          <AgreementPanel
+            agreementDate={agreementDate}
+            firstInstallmentDate={normalizedFirstInstallmentDate}
+            minimumFirstInstallmentDate={minimumFirstInstallmentDate}
+            installmentCount={installmentCount}
+            installmentCountInput={installmentCountInput}
+            monthlyRateInput={monthlyRateInput}
+            attorneyFeesAmountInput={attorneyFeesAmountInput}
+            agreementMode={agreementMode}
+            legalCostsAmountInput={legalCostsAmountInput}
+            note={note}
+            hasDownPayment={hasDownPayment}
+            downPaymentAmount={downPaymentAmount}
+            downPaymentDate={normalizedDownPaymentDate}
+            selectedAssets={selectedAssets}
+            simulation={simulation}
+            searchDescription={searchDescription}
+            onSaveCase={handleSaveCase}
+            onExportPdf={handleExportPdf}
+            onSendForSignature={handleSendForSignature}
+            signatureRequestPending={signatureRequestPending}
+            onAgreementDateChange={handleAgreementDateChange}
+            onFirstInstallmentDateChange={setFirstInstallmentDate}
+            onInstallmentCountChange={handleInstallmentCountChange}
+            onInstallmentCountBlur={handleInstallmentCountBlur}
+            onMonthlyRateChange={setMonthlyRateInput}
+            onMonthlyRateBlur={() =>
+              setMonthlyRateInput(formatEditablePercent(monthlyRatePercent))
+            }
+            onAttorneyFeesAmountChange={setAttorneyFeesAmountInput}
+            onAttorneyFeesBlur={() =>
+              setAttorneyFeesAmountInput(formatEditableMoney(attorneyFeesAmount))
+            }
+            onAgreementModeChange={setAgreementMode}
+            onLegalCostsAmountChange={setLegalCostsAmountInput}
+            onLegalCostsBlur={() =>
+              setLegalCostsAmountInput(formatEditableMoney(legalCostsAmount))
+            }
+            onDownPaymentToggle={handleDownPaymentToggle}
+            onDownPaymentAmountChange={handleDownPaymentAmountChange}
+            onDownPaymentDateChange={handleDownPaymentDateChange}
+            onNoteChange={setNote}
+          />
           </div>
-        </div>
+        </section>
 
         {contractDialogOpen && (
           <div className="dialog-backdrop" role="presentation">
