@@ -1081,23 +1081,21 @@ tbody tr.selected {
   position: fixed;
   top: 0;
   left: -10000px;
-  width: 210mm;
+  width: 794px;
   pointer-events: none;
   opacity: 0;
 }
 
 .contract-print-root--export {
   display: block !important;
-}
-
-.contract-print-root--export .contract-page-header,
-.contract-print-root--export .contract-page-footer {
-  display: none !important;
+  width: 794px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
 }
 
 .contract-sheet {
-  width: 210mm;
-  min-height: 297mm;
+  width: 794px;
+  max-width: none;
   margin: 0 auto;
   padding: 0;
   background: #ffffff;
@@ -1105,35 +1103,43 @@ tbody tr.selected {
   font-family: "Times New Roman", Times, serif;
 }
 
-.contract-page-header,
-.contract-page-footer {
-  display: none;
+.contract-page {
+  position: relative;
+  width: 794px;
+  height: 1123px;
+  padding: 68px 64px 91px;
+  box-sizing: border-box;
+  background: #ffffff;
+  page-break-after: always;
+  break-after: page;
 }
 
-.contract-page-header__logo {
-  display: block;
-  width: 54mm;
-  height: auto;
+.contract-page:last-child {
+  page-break-after: auto;
+  break-after: auto;
 }
 
 .contract-header {
-  position: relative;
-  min-height: 24mm;
-  margin-bottom: 8mm;
+  display: grid;
+  grid-template-columns: 144px 1fr 144px;
+  align-items: start;
+  min-height: 102px;
+  margin: 0 0 15px;
 }
 
 .contract-header__logo {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 28mm;
+  display: block;
+  width: 113px;
   height: auto;
 }
 
 .contract-header h1 {
+  grid-column: 2;
   margin: 0;
+  padding-top: 4px;
   font-size: 12pt;
   font-weight: 700;
+  line-height: 1.1;
   text-align: center;
   letter-spacing: 0;
 }
@@ -1141,6 +1147,8 @@ tbody tr.selected {
 .contract-body {
   display: grid;
   gap: 0;
+  width: 100%;
+  max-width: none;
 }
 
 .contract-body p,
@@ -1162,12 +1170,17 @@ tbody tr.selected {
   counter-reset: contract-clause;
 }
 
+.contract-clauses--continued {
+  margin-top: 0;
+  counter-reset: contract-clause 9;
+}
+
 .contract-clauses li {
   position: relative;
   margin: 0;
   padding-left: 26pt;
   font-size: 12pt;
-  line-height: 1.45;
+  line-height: 1.15;
   text-align: justify;
   break-inside: avoid-page;
   page-break-inside: avoid;
@@ -1208,6 +1221,30 @@ tbody tr.selected {
   width: min(100%, 520px);
   margin: 0 auto 8px;
   border-top: 1px solid #000000;
+}
+
+.contract-signature-block strong {
+  display: block;
+  font-size: 12pt;
+  line-height: 1.15;
+}
+
+.contract-page-footer {
+  position: absolute;
+  left: 64px;
+  right: 64px;
+  bottom: 60px;
+  display: block;
+  color: #000000;
+  font-family: "Times New Roman", Times, serif;
+  text-align: center;
+}
+
+.contract-page-footer p {
+  margin: 0;
+  font-size: 8pt;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 @media (max-width: 1180px) {
@@ -1292,9 +1329,13 @@ tbody tr.selected {
 }
 
 @media print {
+  html {
+    min-width: 0;
+  }
+
   @page {
     size: A4;
-    margin: 80px 20mm 60px 20mm;
+    margin: 0;
   }
 
   body {
@@ -1314,14 +1355,7 @@ tbody tr.selected {
   }
 
   body.printing-contract .contract-page-footer {
-    position: fixed;
-    bottom: 0;
-    left: 20mm;
-    right: 20mm;
     display: block !important;
-    color: #000000;
-    font-family: "Times New Roman", Times, serif;
-    text-align: center;
   }
 
   body.printing-contract .contract-page-footer p {
@@ -1332,7 +1366,7 @@ tbody tr.selected {
   }
 
   body.printing-contract .contract-sheet {
-    width: 100%;
+    width: 794px;
     min-height: auto;
     margin: 0;
     padding: 0;
@@ -1341,8 +1375,7 @@ tbody tr.selected {
   body.printing-contract .contract-body p,
   body.printing-contract .contract-footer p,
   body.printing-contract .contract-clauses li {
-    font-size: 12pt;
-    line-height: 1.15;
+    line-height: inherit;
   }
 
   body.printing-contract .contract-signature-block {

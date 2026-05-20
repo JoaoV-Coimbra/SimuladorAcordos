@@ -1027,16 +1027,18 @@ async function generateContractPdfBlob({ filename }) {
   exportRoot.classList.add("contract-print-root--export");
 
   try {
-    // Espera imagens carregarem para evitar PDF com logo ausente.
+    // Espera assets carregarem antes de converter o DOM em PDF.
     await waitForImages(exportRoot);
     const worker = html2pdf()
       .set({
-        margin: [10, 10, 10, 10],
+        margin: [0, 0, 0, 0],
         filename,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
+          windowWidth: 794,
+          windowHeight: 1123,
           backgroundColor: "#ffffff"
         },
         jsPDF: {
