@@ -20,6 +20,7 @@ export function AgreementPanel({
   searchDescription,
   onSaveCase,
   onExportPdf,
+  onExportCalculationPdf,
   onSendForSignature,
   signatureRequestPending,
   onAgreementDateChange,
@@ -64,6 +65,14 @@ export function AgreementPanel({
             disabled={!simulation}
           >
             Gerar contrato PDF
+          </button>
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={onExportCalculationPdf}
+            disabled={!simulation}
+          >
+            Gerar calculo PDF
           </button>
           <button
             type="button"

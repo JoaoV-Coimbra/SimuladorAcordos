@@ -8,6 +8,7 @@ import {
 } from "./constants.js";
 import { AgreementContract } from "./components/AgreementContract.jsx";
 import { CaseLibrary } from "./components/CaseLibrary.jsx";
+import { CalculationReport } from "./components/CalculationReport.jsx";
 import { AgreementPanel } from "./components/AgreementPanel.jsx";
 import { BrandLogos } from "./components/BrandLogos.jsx";
 import { SearchPanel } from "./components/SearchPanel.jsx";
@@ -334,6 +335,37 @@ export function App() {
 
     setDialogMode("pdf");
     setContractDialogOpen(true);
+  }
+
+  async function handleExportCalculationPdf() {
+    if (!simulation) {
+      return;
+    }
+
+    try {
+      const filename = buildCalculationReportFileName({
+        reportMetadata,
+        contractFields,
+        agreementDate,
+      });
+      const pdfBlob = await generateDomPdfBlob({
+        elementId: "calculation-report-root",
+        exportClassName: "calculation-report-root--export",
+        hostClassName: "calculation-report-export-host",
+        filename,
+        windowWidth: 960,
+        windowHeight: 680,
+        orientation: "landscape",
+        margin: [3, 3, 5, 3],
+      });
+      downloadBlob(pdfBlob, filename);
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel gerar o PDF do calculo.",
+      );
+    }
   }
 
   function handleSendForSignature() {
@@ -757,6 +789,7 @@ export function App() {
             searchDescription={searchDescription}
             onSaveCase={handleSaveCase}
             onExportPdf={handleExportPdf}
+            onExportCalculationPdf={handleExportCalculationPdf}
             onSendForSignature={handleSendForSignature}
             signatureRequestPending={signatureRequestPending}
             onAgreementDateChange={handleAgreementDateChange}
@@ -924,6 +957,13 @@ export function App() {
       </main>
 
       <AgreementContract documentData={contractDocumentData} />
+      <CalculationReport
+        simulation={simulation}
+        selectedAssets={selectedAssets}
+        searchDescription={searchDescription}
+        agreementMode={agreementMode}
+        note={note}
+      />
     </>
   );
 }
@@ -1008,43 +1048,69 @@ function formatEditableMoney(value) {
 
 // Monta um PDF temporario a partir do DOM oculto do contrato.
 async function generateContractPdfBlob({ filename }) {
-  const contractElement = document.getElementById("contract-print-root");
-  if (!contractElement) {
-    throw new Error("Contrato nao encontrado para exportacao.");
+  return generateDomPdfBlob({
+    elementId: "contract-print-root",
+    exportClassName: "contract-print-root--export",
+    hostClassName: "contract-export-host",
+    filename,
+    windowWidth: 794,
+    windowHeight: 1123,
+    orientation: "portrait",
+    missingMessage: "Contrato nao encontrado para exportacao.",
+    prepareMessage: "Falha ao preparar o contrato para exportacao.",
+  });
+}
+
+// Monta um PDF temporario a partir de uma area oculta da tela.
+async function generateDomPdfBlob({
+  elementId,
+  exportClassName,
+  hostClassName,
+  filename,
+  windowWidth,
+  windowHeight,
+  orientation,
+  margin = [0, 0, 0, 0],
+  missingMessage = "Conteudo nao encontrado para exportacao.",
+  prepareMessage = "Falha ao preparar o conteudo para exportacao.",
+}) {
+  const sourceElement = document.getElementById(elementId);
+  if (!sourceElement) {
+    throw new Error(missingMessage);
   }
 
   const exportHost = document.createElement("div");
-  exportHost.className = "contract-export-host";
-  exportHost.innerHTML = contractElement.outerHTML;
+  exportHost.className = hostClassName;
+  exportHost.innerHTML = sourceElement.outerHTML;
   document.body.appendChild(exportHost);
 
-  const exportRoot = exportHost.querySelector("#contract-print-root");
+  const exportRoot = exportHost.querySelector(`#${elementId}`);
   if (!exportRoot) {
     exportHost.remove();
-    throw new Error("Falha ao preparar o contrato para exportacao.");
+    throw new Error(prepareMessage);
   }
 
-  exportRoot.classList.add("contract-print-root--export");
+  exportRoot.classList.add(exportClassName);
 
   try {
     // Espera assets carregarem antes de converter o DOM em PDF.
     await waitForImages(exportRoot);
     const worker = html2pdf()
       .set({
-        margin: [0, 0, 0, 0],
+        margin,
         filename,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
-          windowWidth: 794,
-          windowHeight: 1123,
+          windowWidth,
+          windowHeight,
           backgroundColor: "#ffffff"
         },
         jsPDF: {
           unit: "mm",
           format: "a4",
-          orientation: "portrait"
+          orientation
         },
         pagebreak: {
           mode: ["css", "legacy"]
@@ -1094,6 +1160,30 @@ function buildContractFileName(documentData) {
     .replace(/[^a-zA-Z0-9-]/g, "")
     .toLowerCase();
   return `${debtorName || "contrato"}-${signatureDate || "acordo"}.pdf`;
+}
+
+function buildCalculationReportFileName({ reportMetadata, contractFields, agreementDate }) {
+  const label = String(
+    reportMetadata?.owner || contractFields?.unit || reportMetadata?.unit || "calculo",
+  )
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `calculo-acordo-${label || "simulacao"}-${agreementDate || "data"}.pdf`;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 // Normaliza telefones nacionais para o formato internacional esperado pela API.
