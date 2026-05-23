@@ -42,7 +42,7 @@ export function App() {
   const [assets, setAssets] = useState([]);
   const [selectedAssetIds, setSelectedAssetIds] = useState(new Set());
   const [statusMessage, setStatusMessage] = useState(
-    "Envie a planilha debito em PDF para carregar os ativos automaticamente.",
+    "Envie a planilha débito em PDF para carregar os ativos automaticamente.",
   );
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [reportMetadata, setReportMetadata] = useState(null);
@@ -61,7 +61,7 @@ export function App() {
   const [agreementMode, setAgreementMode] = useState("extrajudicial");
   const [legalCostsAmountInput, setLegalCostsAmountInput] = useState("0.00");
   const [hasDownPayment, setHasDownPayment] = useState(false);
-  const [downPaymentAmount, setDownPaymentAmount] = useState("0.00");
+  const [downPaymentAmount, setDownPaymentAmount] = useState(formatEditableMoney(0));
   const [downPaymentDate, setDownPaymentDate] = useState(minimumFirstInstallmentDate);
   const [note, setNote] = useState("");
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
@@ -206,6 +206,20 @@ export function App() {
       return;
     }
 
+    await processDebtPdfFile(file);
+    event.target.value = "";
+  }
+
+  async function handleFileDrop(file) {
+    await processDebtPdfFile(file);
+  }
+
+  async function processDebtPdfFile(file) {
+    if (!isPdfFile(file)) {
+      setStatusMessage("Envie um arquivo PDF válido para carregar os ativos.");
+      return;
+    }
+
     setStatusMessage("Lendo PDF e extraindo ativos...");
     setUploadedFileName(file.name);
 
@@ -237,7 +251,7 @@ export function App() {
         mensagem: "Assine este acordo, por favor."
       });
       setHasDownPayment(false);
-      setDownPaymentAmount("0.00");
+      setDownPaymentAmount(formatEditableMoney(0));
       setStatusMessage(
         parsedReport.assets.length
           ? buildSuccessMessage(parsedReport)
@@ -262,11 +276,9 @@ export function App() {
         mensagem: "Assine este acordo, por favor."
       });
       setStatusMessage(
-        "Nao foi possivel ler este PDF. Verifique se ele segue o modelo da planilha debito.",
+        "Não foi possível ler este PDF. Verifique se ele segue o modelo da planilha débito.",
       );
     }
-
-    event.target.value = "";
   }
 
   // Alterna a selecao individual de um ativo sem perder o restante da lista escolhida.
@@ -322,6 +334,10 @@ export function App() {
     setDownPaymentAmount(value);
   }
 
+  function handleDownPaymentBlur() {
+    setDownPaymentAmount(formatEditableMoney(normalizeMoney(downPaymentAmount)));
+  }
+
   // Mantem a entrada dentro do intervalo entre data-base e primeira parcela.
   function handleDownPaymentDateChange(value) {
     setDownPaymentDate(value);
@@ -363,7 +379,7 @@ export function App() {
       setStatusMessage(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel gerar o PDF do calculo.",
+          : "Não foi possível gerar o PDF do cálculo.",
       );
     }
   }
@@ -406,7 +422,7 @@ export function App() {
     event.preventDefault();
     const missingFields = [];
     if (!contractFields.address.trim()) {
-      missingFields.push("endereco");
+      missingFields.push("endereço");
     }
     if (!contractFields.email.trim()) {
       missingFields.push("e-mail");
@@ -417,13 +433,13 @@ export function App() {
 
     if (dialogMode === "signature") {
       if (!signatureFields.nome.trim()) {
-        missingFields.push("nome do signatario");
+        missingFields.push("nome do signatário");
       }
       if (!signatureFields.email.trim()) {
-        missingFields.push("e-mail do signatario");
+        missingFields.push("e-mail do signatário");
       }
       if (!signatureFields.telefone.trim()) {
-        missingFields.push("telefone do signatario");
+        missingFields.push("telefone do signatário");
       }
     }
 
@@ -485,7 +501,7 @@ export function App() {
       if (!response.ok) {
         // A API FastAPI devolve erros em detail; usamos esse texto quando existir.
         const errorMessage =
-          payload?.detail || "Nao foi possivel enviar o contrato para assinatura.";
+          payload?.detail || "Não foi possível enviar o contrato para assinatura.";
         throw new Error(errorMessage);
       }
 
@@ -572,7 +588,7 @@ export function App() {
 
     const normalizedTitle = title.trim();
     if (!normalizedTitle) {
-      setStatusMessage("Informe um nome valido para salvar o caso.");
+      setStatusMessage("Informe um nome válido para salvar o caso.");
       return;
     }
 
@@ -620,7 +636,7 @@ export function App() {
   function handleLoadCase(caseId) {
     const savedCase = savedCases.find((entry) => entry.id === caseId);
     if (!savedCase?.snapshot) {
-      setStatusMessage("Nao foi possivel abrir este caso salvo.");
+      setStatusMessage("Não foi possível abrir este caso salvo.");
       return;
     }
 
@@ -677,7 +693,7 @@ export function App() {
 
     const normalizedTitle = nextTitle.trim();
     if (!normalizedTitle) {
-      setStatusMessage("O nome do caso nao pode ficar vazio.");
+      setStatusMessage("O nome do caso não pode ficar vazio.");
       return;
     }
 
@@ -754,7 +770,7 @@ export function App() {
             </div>
             <div className="topbar__meta">
               <BrandLogos />
-              <strong>Leitura automatica de debitos</strong>
+              <strong>Leitura automática de débitos</strong>
             </div>
           </header>
 
@@ -766,6 +782,7 @@ export function App() {
             uploadedFileName={uploadedFileName}
             reportMetadata={reportMetadata}
             onFileUpload={handleFileUpload}
+            onFileDrop={handleFileDrop}
             onToggleAsset={handleToggleAsset}
             onToggleAll={handleToggleAll}
           />
@@ -811,6 +828,7 @@ export function App() {
             }
             onDownPaymentToggle={handleDownPaymentToggle}
             onDownPaymentAmountChange={handleDownPaymentAmountChange}
+            onDownPaymentBlur={handleDownPaymentBlur}
             onDownPaymentDateChange={handleDownPaymentDateChange}
             onNoteChange={setNote}
           />
@@ -831,7 +849,7 @@ export function App() {
                   <p>
                     {dialogMode === "signature"
                       ? "Revise os dados do contrato, informe os campos da assinatura e confirme o envio."
-                      : "O report ja preenche nome, documento e valores. Falta informar os campos abaixo."}
+                      : "O relatório já preenche nome, documento e valores. Falta informar os campos abaixo."}
                   </p>
                 </div>
                 <button
@@ -845,7 +863,7 @@ export function App() {
 
               <form className="grid" onSubmit={handleContractSubmit}>
                 <label className="field field--full">
-                  <span>Endereco completo</span>
+                  <span>Endereço completo</span>
                   <input
                     type="text"
                     value={contractFields.address}
@@ -880,7 +898,7 @@ export function App() {
                 {dialogMode === "signature" && (
                   <>
                     <label className="field">
-                      <span>Nome do signatario</span>
+                      <span>Nome do signatário</span>
                       <input
                         type="text"
                         value={signatureFields.nome}
@@ -930,7 +948,7 @@ export function App() {
 
                 {dialogMode === "signature" && (
                   <div className="dialog-info">
-                    O sistema ainda vai pedir uma confirmacao final antes de enviar o PDF para a API.
+                    O sistema ainda vai pedir uma confirmação final antes de enviar o PDF para a API.
                   </div>
                 )}
 
@@ -968,6 +986,10 @@ export function App() {
   );
 }
 
+function isPdfFile(file) {
+  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+}
+
 // Monta a identificacao visual da origem dos ativos carregados para contextualizar a semi-proposta.
 function buildSourceDescription(reportMetadata, uploadedFileName) {
   if (!reportMetadata) {
@@ -994,10 +1016,10 @@ function buildSuccessMessage(parsedReport) {
   const skippedCount = parsedReport.metadata?.parserSummary?.skippedLines ?? 0;
 
   if (!skippedCount) {
-    return `${assetCount} ativo(s) carregado(s) para simulacao.`;
+    return `${assetCount} ativo(s) carregado(s) para simulação.`;
   }
 
-  return `${assetCount} ativo(s) carregado(s); ${skippedCount} linha(s) do PDF nao puderam ser interpretadas automaticamente.`;
+  return `${assetCount} ativo(s) carregado(s); ${skippedCount} linha(s) do PDF não puderam ser interpretadas automaticamente.`;
 }
 
 function normalizeInstallmentCount(value) {
@@ -1022,15 +1044,26 @@ function normalizePercent(value, fallbackValue) {
 // Aceita formatos brasileiros e simples para converter entradas monetarias editaveis.
 function normalizeMoney(value) {
   const rawValue = String(value).trim();
-  const normalizedValue = rawValue.includes(",")
-    ? rawValue.replace(/\./g, "").replace(",", ".")
-    : rawValue;
+  const normalizedValue = normalizeEditableMoneyText(rawValue);
   const parsedValue = Number.parseFloat(normalizedValue);
   if (Number.isNaN(parsedValue)) {
     return 0;
   }
 
   return roundCurrency(Math.max(parsedValue, 0));
+}
+
+function normalizeEditableMoneyText(value) {
+  const compactValue = value.replace(/\s/g, "");
+  if (compactValue.includes(",")) {
+    return compactValue.replace(/\./g, "").replace(",", ".");
+  }
+
+  if (/^\d{1,3}(\.\d{3})+$/.test(compactValue)) {
+    return compactValue.replace(/\./g, "");
+  }
+
+  return compactValue;
 }
 
 // Mantem o valor padrao da taxa no formato mais natural para usuarios pt-BR.
@@ -1056,8 +1089,8 @@ async function generateContractPdfBlob({ filename }) {
     windowWidth: 794,
     windowHeight: 1123,
     orientation: "portrait",
-    missingMessage: "Contrato nao encontrado para exportacao.",
-    prepareMessage: "Falha ao preparar o contrato para exportacao.",
+    missingMessage: "Contrato não encontrado para exportação.",
+    prepareMessage: "Falha ao preparar o contrato para exportação.",
   });
 }
 
@@ -1071,8 +1104,8 @@ async function generateDomPdfBlob({
   windowHeight,
   orientation,
   margin = [0, 0, 0, 0],
-  missingMessage = "Conteudo nao encontrado para exportacao.",
-  prepareMessage = "Falha ao preparar o conteudo para exportacao.",
+  missingMessage = "Conteúdo não encontrado para exportação.",
+  prepareMessage = "Falha ao preparar o conteúdo para exportação.",
 }) {
   const sourceElement = document.getElementById(elementId);
   if (!sourceElement) {
@@ -1270,7 +1303,7 @@ function restoreCaseSnapshot(snapshot, setters) {
   setters.setAgreementMode(snapshot.agreementMode || "extrajudicial");
   setters.setLegalCostsAmountInput(snapshot.legalCostsAmountInput || "0.00");
   setters.setHasDownPayment(Boolean(snapshot.hasDownPayment));
-  setters.setDownPaymentAmount(snapshot.downPaymentAmount || "0.00");
+  setters.setDownPaymentAmount(snapshot.downPaymentAmount || formatEditableMoney(0));
   setters.setDownPaymentDate(snapshot.downPaymentDate || snapshot.agreementDate || "");
   setters.setNote(snapshot.note || "");
   setters.setContractFields(snapshot.contractFields || { address: "", email: "", unit: "" });

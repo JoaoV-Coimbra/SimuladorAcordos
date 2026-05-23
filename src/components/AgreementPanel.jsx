@@ -36,6 +36,7 @@ export function AgreementPanel({
   onLegalCostsBlur,
   onDownPaymentToggle,
   onDownPaymentAmountChange,
+  onDownPaymentBlur,
   onDownPaymentDateChange,
   onNoteChange,
 }) {
@@ -47,7 +48,7 @@ export function AgreementPanel({
       <div className="panel__header">
         <div>
           <h2>Dados do Acordo</h2>
-          <p>Parametros usados no contrato</p>
+          <p>Parâmetros usados no contrato</p>
         </div>
         <div className="panel__header-actions">
           <button
@@ -58,21 +59,23 @@ export function AgreementPanel({
           >
             Salvar caso
           </button>
-          <button
-            type="button"
-            className="button button--ghost"
-            onClick={onExportPdf}
-            disabled={!simulation}
-          >
-            Gerar contrato PDF
-          </button>
+          {!isJudicialAgreement && (
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={onExportPdf}
+              disabled={!simulation}
+            >
+              Gerar contrato PDF
+            </button>
+          )}
           <button
             type="button"
             className="button button--ghost"
             onClick={onExportCalculationPdf}
             disabled={!simulation}
           >
-            Gerar calculo PDF
+            Gerar cálculo PDF
           </button>
           <button
             type="button"
@@ -98,7 +101,7 @@ export function AgreementPanel({
           </label>
 
           <label className="field">
-            <span>1a parcela</span>
+            <span>1ª parcela</span>
             <input
               type="date"
               min={minimumFirstInstallmentDate}
@@ -120,7 +123,7 @@ export function AgreementPanel({
           </label>
 
           <label className="field">
-            <span>Numero de parcelas</span>
+            <span>Número de parcelas</span>
             <input
               type="number"
               min="1"
@@ -132,7 +135,7 @@ export function AgreementPanel({
           </label>
 
           <label className="field">
-            <span>Honorarios advocaticios (R$)</span>
+            <span>Honorários advocatícios (R$)</span>
             <input
               type="text"
               inputMode="decimal"
@@ -200,11 +203,11 @@ export function AgreementPanel({
               <label className="field">
                 <span>Valor da entrada</span>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={downPaymentAmount}
                   onChange={(event) => onDownPaymentAmountChange(event.target.value)}
+                  onBlur={onDownPaymentBlur}
                 />
               </label>
 
@@ -222,10 +225,10 @@ export function AgreementPanel({
           )}
 
           <label className="field">
-            <span>Observacao comercial</span>
+            <span>Observação comercial</span>
             <input
               type="text"
-              placeholder="Ex.: condicao padrao de negociacao"
+              placeholder="Ex.: condição padrão de negociação"
               value={note}
               onChange={(event) => onNoteChange(event.target.value)}
             />
@@ -247,7 +250,7 @@ export function AgreementPanel({
               <p>{searchDescription}</p>
             </div>
             <div className="proposal__hero-meta">
-              <div className="proposal__badge">Calculo automatico</div>
+              <div className="proposal__badge">Cálculo automático</div>
               {simulation.downPayment > 0 && (
                 <div className="proposal__badge proposal__badge--secondary">
                   Entrada de {formatCurrency(simulation.downPayment)}
@@ -263,7 +266,7 @@ export function AgreementPanel({
               value={formatCurrency(simulation.correctedBalance)}
               highlight
             />
-            <ResultCard label="Honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
+            <ResultCard label="Honorários" value={formatCurrency(simulation.attorneyFeesAmount)} />
             {simulation.legalCostsAmount > 0 && (
               <ResultCard label="Custas" value={formatCurrency(simulation.legalCostsAmount)} />
             )}
@@ -277,11 +280,11 @@ export function AgreementPanel({
             <section className="info-card">
               <div className="info-card__header">
                 <h4>Resumo financeiro</h4>
-                <p>Base de calculo do acordo com tabela Price no modelo Pre.</p>
+                <p>Base de cálculo do acordo com tabela Price no modelo Pré.</p>
               </div>
               <div className="info-grid">
                 <InfoPill label="Data do acordo" value={formatDate(simulation.agreementDate)} />
-                <InfoPill label="1a parcela" value={formatDate(simulation.firstInstallmentDate)} />
+                <InfoPill label="1ª parcela" value={formatDate(simulation.firstInstallmentDate)} />
                 <InfoPill
                   label="Tipo de acordo"
                   value={isJudicialAgreement ? "Judicial" : "Extrajudicial"}
@@ -289,11 +292,11 @@ export function AgreementPanel({
                 {simulation.legalCostsAmount > 0 && (
                   <InfoPill label="Custas processuais" value={formatCurrency(simulation.legalCostsAmount)} />
                 )}
-                <InfoPill label="Divida total" value={formatCurrency(simulation.totalDebt)} />
+                <InfoPill label="Dívida total" value={formatCurrency(simulation.totalDebt)} />
                 <InfoPill label="Dias pro rata" value={simulation.prorataDays} />
-                <InfoPill label="Taxa diaria" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
-                <InfoPill label="Periodo Price" value={simulation.pricePrePeriod} />
-                <InfoPill label="Valor dos honorarios" value={formatCurrency(simulation.attorneyFeesAmount)} />
+                <InfoPill label="Taxa diária" value={`${formatPercent(simulation.dailyRatePercent)}%`} />
+                <InfoPill label="Período Price" value={simulation.pricePrePeriod} />
+                <InfoPill label="Valor dos honorários" value={formatCurrency(simulation.attorneyFeesAmount)} />
                 <InfoPill label="Base do acordo" value={formatCurrency(simulation.agreementBaseAmount)} />
                 <InfoPill label="Entrada" value={formatCurrency(simulation.downPayment)} />
                 {simulation.downPaymentEvent && (
@@ -303,13 +306,13 @@ export function AgreementPanel({
                 <InfoPill label="Total pago" value={formatCurrency(simulation.totalPaid)} />
                 <InfoPill label="Juros do parcelamento" value={formatCurrency(simulation.financedInterest)} />
                 <InfoPill label="Juros sobre saldo" value={`${formatPercent(simulation.interestPercent)}%`} />
-                <InfoPill label="Diferenca vs. divida" value={formatCurrency(simulation.totalInterest)} />
+                <InfoPill label="Diferença vs. dívida" value={formatCurrency(simulation.totalInterest)} />
               </div>
             </section>
 
             <aside className="proposal__aside info-card">
               <div className="info-card__header">
-                <h4>Ativos incluidos</h4>
+                <h4>Ativos incluídos</h4>
                 <p>Itens usados para compor a semi-proposta.</p>
               </div>
               <ul className="selected-assets-list">
@@ -318,29 +321,29 @@ export function AgreementPanel({
                   <li key={asset.id}>
                     <span className="selected-assets-list__label">Ativo</span>
                     <strong>{asset.id}</strong>
-                    <span className="selected-assets-list__label">Dt.Vencimento</span>
+                    <span className="selected-assets-list__label">Dt. vencimento</span>
                     <span>{formatDate(asset.dueDate)}</span>
                   </li>
                 ))}
               </ul>
               <div className="proposal-note">
-                <strong>Observacao</strong>
-                <p>{note.trim() || "Sem observacoes adicionais."}</p>
+                <strong>Observação</strong>
+                <p>{note.trim() || "Sem observações adicionais."}</p>
               </div>
             </aside>
           </div>
 
           <section className="proposal-print-summary info-card">
             <div className="info-card__header">
-              <h4>Condicoes da semi-proposta</h4>
+              <h4>Condições da semi-proposta</h4>
               <p>Resumo usado para montar o contrato em PDF.</p>
             </div>
             <div className="proposal-print-summary__content">
                 <p>
-                Divida consolidada em {formatCurrency(simulation.totalDebt)}
+                Dívida consolidada em {formatCurrency(simulation.totalDebt)}
                 {simulation.legalCostsAmount > 0
                   ? `, incluindo custas processuais de ${formatCurrency(simulation.legalCostsAmount)}`
-                  : ""}, com honorarios advocaticios de {formatCurrency(simulation.attorneyFeesAmount)} e
+                  : ""}, com honorários advocatícios de {formatCurrency(simulation.attorneyFeesAmount)} e
                 {simulation.downPayment > 0
                   ? ` entrada de ${formatCurrency(simulation.downPayment)} e`
                   : ""}{" "}
@@ -361,7 +364,7 @@ export function AgreementPanel({
               <p>
                 {simulation.downPaymentEvent
                   ? "Entrada destacada e saldo remanescente parcelado no modelo Price."
-                  : "Parcelas fixas no modelo Price com pagamento da 1a parcela no inicio do periodo."}
+                  : "Parcelas fixas no modelo Price com pagamento da 1ª parcela no início do período."}
               </p>
             </div>
 
@@ -370,12 +373,12 @@ export function AgreementPanel({
                 <table className="schedule-table schedule-table--entry">
                   <thead>
                     <tr>
-                      <th>Descricao</th>
+                      <th>Descrição</th>
                       <th>Data</th>
                       <th>Saldo inicial</th>
                       <th>Juros</th>
                       <th>Pagamento</th>
-                      <th>Amortizacao</th>
+                      <th>Amortização</th>
                       <th>Saldo final</th>
                     </tr>
                   </thead>
@@ -403,7 +406,7 @@ export function AgreementPanel({
                     <th title="Saldo base">Base</th>
                     <th title="Juros">Juros</th>
                     <th title="Saldo antes do pagamento">Antes</th>
-                    <th title="Amortizacao">Amort.</th>
+                    <th title="Amortização">Amort.</th>
                     <th title="Parcela fixa">Parcela</th>
                     <th title="Saldo final">Final</th>
                   </tr>

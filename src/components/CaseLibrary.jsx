@@ -21,7 +21,7 @@ export function CaseLibrary({
 
       {!cases.length && (
         <div className="empty-state">
-          Salve um caso para montar sua biblioteca local dentro da aplicacao.
+          Salve um caso para montar sua biblioteca local dentro da aplicação.
         </div>
       )}
 
@@ -43,7 +43,7 @@ export function CaseLibrary({
 
               <div className="library-meta">
                 <span>Total: {formatCurrency(savedCase.totalPaid || 0)}</span>
-                <span>1a parcela: {savedCase.firstInstallmentDate ? formatDate(savedCase.firstInstallmentDate) : "-"}</span>
+                <span>1ª parcela: {savedCase.firstInstallmentDate ? formatDate(savedCase.firstInstallmentDate) : "-"}</span>
               </div>
 
               <div className="library-card__footer">

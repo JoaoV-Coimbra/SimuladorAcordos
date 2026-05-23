@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate, formatPercent } from "../lib/formatters.js";
+import g5JusLogo from "../assets/g5jus-logo-from-docx.png";
 
 export function CalculationReport({
   simulation,
@@ -16,13 +17,13 @@ export function CalculationReport({
     (installment) => installment.installmentNumber > 0,
   );
   const calculationRows = [
-    ["Divida original", formatCurrency(simulation.baseDebt)],
+    ["Dívida original", formatCurrency(simulation.baseDebt)],
     ["Custas", formatCurrency(simulation.legalCostsAmount)],
-    ["Honorarios", formatCurrency(simulation.attorneyFeesAmount)],
+    ["Honorários", formatCurrency(simulation.attorneyFeesAmount)],
     ["Base do acordo", formatCurrency(simulation.agreementBaseAmount)],
     ["Entrada", formatCurrency(simulation.downPayment)],
     ["Saldo financiado", formatCurrency(simulation.financedBalance)],
-    ["Correcao ate a 1a parcela", `${simulation.prorataDays} dia(s) uteis`],
+    ["Correção até a 1ª parcela", `${simulation.prorataDays} dia(s) úteis`],
     ["Taxa mensal", `${formatPercent(simulation.monthlyRatePercent)}%`],
     ["Saldo corrigido", formatCurrency(simulation.correctedBalance)],
     ["Parcelamento", `${simulation.installmentCount}x de ${formatCurrency(simulation.installmentAmount)}`],
@@ -35,9 +36,12 @@ export function CalculationReport({
       <article className="calculation-report">
         <header className="calculation-report__header">
           <div>
-            <p>Calculo do acordo</p>
-            <h1>Resumo para conferencia</h1>
+            <p>Cálculo do acordo</p>
+            <h1>Resumo para conferência</h1>
             <span>{searchDescription}</span>
+          </div>
+          <div className="calculation-report__brand" aria-label="G5Jus">
+            <img src={g5JusLogo} alt="G5Jus" />
           </div>
           <div className="calculation-report__stamp">
             <strong>{formatCurrency(simulation.totalPaid)}</strong>
@@ -54,11 +58,11 @@ export function CalculationReport({
 
         <section className="calculation-report__section">
           <div className="calculation-report__section-title">
-            <h2>Parametros usados</h2>
+            <h2>Parâmetros usados</h2>
             <p>
-              {formatDate(simulation.agreementDate)} | 1a parcela em{" "}
+              {formatDate(simulation.agreementDate)} | 1ª parcela em{" "}
               {formatDate(simulation.firstInstallmentDate)} |{" "}
-              {isJudicialAgreement ? "Judicial" : "Extrajudicial"} | Price Pre |{" "}
+              {isJudicialAgreement ? "Judicial" : "Extrajudicial"} | Price Pré |{" "}
               {selectedAssets.length} ativo(s)
             </p>
           </div>
@@ -90,7 +94,7 @@ export function CalculationReport({
                     <th>Saldo inicial</th>
                     <th>Juros</th>
                     <th>Pagamento</th>
-                    <th>Amortizacao</th>
+                    <th>Amortização</th>
                     <th>Saldo final</th>
                   </tr>
                 </thead>
@@ -121,7 +125,7 @@ export function CalculationReport({
                   <th>Parc.</th>
                   <th>Vencimento</th>
                   <th>Juros</th>
-                  <th>Amortizacao</th>
+                  <th>Amortização</th>
                   <th>Parcela</th>
                   <th>Saldo final</th>
                 </tr>
@@ -144,7 +148,7 @@ export function CalculationReport({
 
         <section className="calculation-report__footer">
           <span>Ativos: {selectedAssets.map((asset) => asset.id).join(", ")}</span>
-          <span>Observacao: {note.trim() || "Sem observacoes adicionais."}</span>
+          <span>Observação: {note.trim() || "Sem observações adicionais."}</span>
         </section>
       </article>
     </section>

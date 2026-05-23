@@ -454,6 +454,12 @@ select {
   background: #f6fbfd;
 }
 
+.upload-box.is-dragging {
+  border-color: var(--brand);
+  background: #edf7fb;
+  box-shadow: 0 0 0 4px rgba(23, 92, 128, 0.12);
+}
+
 .upload-box__button {
   position: relative;
 }
@@ -471,9 +477,14 @@ select {
 
 .upload-box__meta span,
 .report-summary span {
+  display: block;
   color: var(--muted);
   font-size: 0.88rem;
   line-height: 1.25;
+}
+
+.upload-box__meta span + span {
+  margin-top: 4px;
 }
 
 .report-summary {
@@ -1126,9 +1137,9 @@ tbody tr.selected {
 
 .calculation-report__header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
+  grid-template-columns: minmax(0, 1fr) 170px 180px;
   gap: 12px;
-  align-items: end;
+  align-items: center;
   padding-bottom: 7px;
   border-bottom: 2px solid #175c80;
 }
@@ -1156,6 +1167,19 @@ tbody tr.selected {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.calculation-report__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.calculation-report__brand img {
+  display: block;
+  width: 118px;
+  height: auto;
 }
 
 .calculation-report__stamp {
@@ -1260,6 +1284,7 @@ tbody tr.selected {
   color: #17202a;
   font-size: 8px;
   line-height: 1.08;
+  text-align: center;
   white-space: nowrap;
 }
 
@@ -1273,7 +1298,6 @@ tbody tr.selected {
 }
 
 .calculation-report__table td {
-  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1301,11 +1325,6 @@ tbody tr.selected {
 .calculation-report__table--pairs th,
 .calculation-report__table--pairs td {
   border-bottom: 0;
-}
-
-.calculation-report__table--schedule td:first-child,
-.calculation-report__table--schedule td:nth-child(2) {
-  text-align: left;
 }
 
 .calculation-report__table--schedule {
