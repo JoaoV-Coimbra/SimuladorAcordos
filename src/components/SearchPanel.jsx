@@ -58,8 +58,12 @@ export function SearchPanel({
             <strong>{reportMetadata.unit || "-"}</strong>
           </div>
           <div>
-            <span>Total do relatorio</span>
+            <span>Total dos ativos</span>
             <strong>{reportMetadata.totalDebt || "-"}</strong>
+          </div>
+          <div>
+            <span>Divida total</span>
+            <strong>{formatCurrency(reportMetadata.totalSpreadsheetDebtAmount || 0)}</strong>
           </div>
           <div>
             <span>Honorarios</span>

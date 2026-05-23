@@ -71,14 +71,23 @@ function groupTextItemsIntoLines(items) {
 
 // Extrai os dados de contexto do cabecalho, como condominio, unidade e total do relatorio.
 function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
+  const debtSubtotalToken = extractDebtSubtotalFinal(lines);
+  const attorneyFeesAmount = extractAttorneyFeesAmount(lines);
+  const legalCostsAmount = extractLegalCostsAmount(lines);
+  const totalAssetsAmount = debtSubtotalToken ? parseBrazilianNumber(debtSubtotalToken) : 0;
+
   const metadata = {
     condominium: "",
     owner: "",
     ownerDocument: "",
     unit: "",
     totalDebt: "",
-    attorneyFeesAmount: extractAttorneyFeesAmount(lines),
-    legalCostsAmount: extractLegalCostsAmount(lines),
+    totalAssetsAmount,
+    totalSpreadsheetDebtAmount: roundBrazilianCurrency(
+      totalAssetsAmount + attorneyFeesAmount + legalCostsAmount,
+    ),
+    attorneyFeesAmount,
+    legalCostsAmount,
     parserSummary: {
       skippedLines: assetExtraction.skippedLines.length
     }
@@ -104,7 +113,7 @@ function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
   );
   metadata.totalDebt = rawTotalMatch?.[1]?.trim()
     || normalizedTotalMatch?.[1]?.trim()
-    || extractDebtSubtotalFinal(lines)
+    || debtSubtotalToken
     || "";
 
   metadata.unit = extractInlineMetadataValue(lines, "UNIDADE");
@@ -216,6 +225,10 @@ function convertPdfDateToInput(value) {
 // Converte valores monetarios brasileiros com virgula decimal para numero JavaScript.
 function parseBrazilianNumber(value) {
   return Number.parseFloat(value.replace(/\./g, "").replace(",", "."));
+}
+
+function roundBrazilianCurrency(value) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 // Busca valores simples no cabecalho, como "Unidade: UND77303" e "Proprietario : Nome".
