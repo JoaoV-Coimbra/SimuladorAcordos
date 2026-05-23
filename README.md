@@ -106,3 +106,4 @@ Observacao: se o front e a API rodarem em portas diferentes, a API precisa liber
 - o parser atual foi feito para o modelo de PDF da planilha de debito usado pelo projeto;
 - a integracao com API ja existe no front, mas depende da API FastAPI estar rodando e configurada;
 - se o layout do PDF mudar, a logica de extracao em `src/services/debtPdfParser.js` provavelmente precisara ser ajustada.
+- Projeto foi desenvolvido para área da G5 Jus dentro da empresa G5 Partners. Desenvolvido por João Victor Coimbra
