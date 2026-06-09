@@ -600,24 +600,33 @@ tbody tr.selected {
 }
 
 .assets-table {
-  table-layout: auto;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.assets-section .table-wrap {
+  overflow: hidden;
 }
 
 .assets-table th,
 .assets-table td {
+  overflow: hidden;
   padding: 9px 8px;
   font-size: 0.82rem;
+  text-overflow: ellipsis;
 }
 
 .assets-table th:nth-child(1),
 .assets-table td:nth-child(1) {
-  width: 38px;
+  width: 34px;
+  padding-right: 4px;
+  padding-left: 4px;
   text-align: center;
 }
 
 .assets-table th:nth-child(2),
 .assets-table td:nth-child(2) {
-  width: 22%;
+  width: 19%;
 }
 
 .assets-table th:nth-child(3),
@@ -627,12 +636,13 @@ tbody tr.selected {
 
 .assets-table th:nth-child(4),
 .assets-table td:nth-child(4) {
-  width: 22%;
+  width: 27%;
 }
 
 .assets-table th:nth-child(5),
 .assets-table td:nth-child(5) {
-  width: 34%;
+  width: 32%;
+  text-align: right;
 }
 
 .assets-table input[type="checkbox"] {
