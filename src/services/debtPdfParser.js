@@ -126,15 +126,22 @@ function extractAssets(lines) {
   const assets = [];
   const skippedLines = [];
   let isDebtSection = false;
+  let finalAmountPosition = "penultimate";
 
   for (const line of lines) {
     const normalizedLine = normalizeSearchText(line).toUpperCase();
     if (normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")) {
       isDebtSection = true;
+      finalAmountPosition = "penultimate";
       continue;
     }
 
     if (!isDebtSection) {
+      continue;
+    }
+
+    if (looksLikeDebtTableHeader(normalizedLine)) {
+      finalAmountPosition = getFinalAmountPositionFromHeader(normalizedLine);
       continue;
     }
 
@@ -151,7 +158,7 @@ function extractAssets(lines) {
       continue;
     }
 
-    const parsedAsset = parseAssetLine(line);
+    const parsedAsset = parseAssetLine(line, { finalAmountPosition });
     if (parsedAsset) {
       assets.push(parsedAsset);
       continue;
@@ -167,7 +174,7 @@ function extractAssets(lines) {
 }
 
 // Interpreta uma linha individual da tabela do PDF usando o ID como ativo e o Vlr Final como valor devido.
-function parseAssetLine(line) {
+function parseAssetLine(line, { finalAmountPosition = "penultimate" } = {}) {
   const normalizedLine = line.replace(/\s+/g, " ").trim();
   const leadMatch =
     normalizedLine.match(
@@ -193,10 +200,7 @@ function parseAssetLine(line) {
 
   const firstMoneyIndex = currencyMatches[0].index ?? 0;
   const description = rest.slice(0, firstMoneyIndex).replace(/\s+/g, " ").trim();
-  const amountToken =
-    currencyMatches.at(-2)?.[0] ??
-    currencyMatches.at(-1)?.[0] ??
-    "";
+  const amountToken = getFinalAmountToken(currencyMatches, finalAmountPosition);
 
   if (!amountToken) {
     return null;
@@ -209,6 +213,16 @@ function parseAssetLine(line) {
     dueDate,
     amount: parseBrazilianNumber(amountToken)
   };
+}
+
+function getFinalAmountToken(currencyMatches, finalAmountPosition = "penultimate") {
+  const finalAmountMatch = finalAmountPosition === "last"
+    ? currencyMatches.at(-1)
+    : currencyMatches.at(-2) ?? currencyMatches.at(-1);
+
+  return typeof finalAmountMatch === "string"
+    ? finalAmountMatch
+    : finalAmountMatch?.[0] ?? "";
 }
 
 // Converte a data do relatorio no formato DD/MM/YYYY para o padrao YYYY-MM-DD usado nos inputs.
@@ -300,6 +314,18 @@ function looksLikeAssetLine(line) {
   return currencyMatches.length >= 6;
 }
 
+function looksLikeDebtTableHeader(normalizedLine) {
+  return (
+    normalizedLine.includes("ATIVO") &&
+    normalizedLine.includes("VENCIMENTO") &&
+    normalizedLine.includes("VLR FINAL")
+  );
+}
+
+function getFinalAmountPositionFromHeader(normalizedHeaderLine) {
+  return /\bVLR FINAL\s*$/.test(normalizedHeaderLine) ? "last" : "penultimate";
+}
+
 // Soma os subtotais das secoes de honorarios do relatorio para preencher o campo editavel.
 function extractAttorneyFeesAmount(lines) {
   let total = 0;
@@ -342,11 +368,13 @@ function extractAttorneyFeesAmount(lines) {
 // Captura o subtotal de Vlr Final da secao de custas processuais para o modo Judicial.
 function extractLegalCostsAmount(lines) {
   let isLegalCostsSection = false;
+  let finalAmountPosition = "penultimate";
 
   for (const line of lines) {
     const normalizedLine = normalizeSearchText(line).toUpperCase();
     if (normalizedLine.includes("CUSTAS PROCESSUAIS")) {
       isLegalCostsSection = true;
+      finalAmountPosition = "penultimate";
       continue;
     }
 
@@ -354,9 +382,14 @@ function extractLegalCostsAmount(lines) {
       continue;
     }
 
+    if (looksLikeDebtTableHeader(normalizedLine)) {
+      finalAmountPosition = getFinalAmountPositionFromHeader(normalizedLine);
+      continue;
+    }
+
     if (normalizedLine.startsWith("SUB TOTAL")) {
       const currencyMatches = line.match(/-?\d[\d.]*,\d{2}/g) ?? [];
-      const amountToken = currencyMatches.at(-2) ?? currencyMatches.at(-1) ?? "";
+      const amountToken = getFinalAmountToken(currencyMatches, finalAmountPosition);
       return amountToken ? parseBrazilianNumber(amountToken) : 0;
     }
 
@@ -376,11 +409,13 @@ function extractLegalCostsAmount(lines) {
 // Captura o subtotal de Vlr Final apenas da secao de debitos condominiais, sem custas.
 function extractDebtSubtotalFinal(lines) {
   let isDebtSection = false;
+  let finalAmountPosition = "penultimate";
 
   for (const line of lines) {
     const normalizedLine = normalizeSearchText(line).toUpperCase();
     if (normalizedLine.includes("DEBITOS COTAS CONDOMINIAIS")) {
       isDebtSection = true;
+      finalAmountPosition = "penultimate";
       continue;
     }
 
@@ -388,9 +423,14 @@ function extractDebtSubtotalFinal(lines) {
       continue;
     }
 
+    if (looksLikeDebtTableHeader(normalizedLine)) {
+      finalAmountPosition = getFinalAmountPositionFromHeader(normalizedLine);
+      continue;
+    }
+
     if (normalizedLine.startsWith("SUB TOTAL")) {
       const currencyMatches = line.match(/-?\d[\d.]*,\d{2}/g) ?? [];
-      return currencyMatches.at(-2) ?? currencyMatches.at(-1) ?? "";
+      return getFinalAmountToken(currencyMatches, finalAmountPosition);
     }
 
     if (
