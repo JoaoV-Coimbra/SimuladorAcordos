@@ -15,6 +15,11 @@ import { SearchPanel } from "./components/SearchPanel.jsx";
 import { buildAgreementDocumentData } from "./lib/agreementDocument.js";
 import { calculateAgreement } from "./lib/agreementCalculator.js";
 import {
+  buildSoficoSpreadsheetRows,
+  generateSoficoSpreadsheetBlob,
+  normalizeSoficoUnitId,
+} from "./services/soficoSpreadsheetService.js";
+import {
   addBusinessDays,
   formatDateForInput,
   normalizeFirstInstallmentDate,
@@ -380,6 +385,51 @@ export function App() {
         error instanceof Error
           ? error.message
           : "Não foi possível gerar o PDF do cálculo.",
+      );
+    }
+  }
+
+  async function handleExportSoficoSpreadsheet() {
+    if (!simulation) {
+      return;
+    }
+
+    try {
+      const unitId = normalizeSoficoUnitId(
+        contractFields.unit || reportMetadata?.unit || "",
+      );
+      if (!unitId) {
+        setStatusMessage(
+          "Informe a unidade antes de gerar a planilha Sofico.",
+        );
+        setDialogMode("pdf");
+        setContractDialogOpen(true);
+        return;
+      }
+
+      const rows = buildSoficoSpreadsheetRows({
+        unitId,
+        agreementDate,
+        simulation,
+      });
+      const xlsxBlob = await generateSoficoSpreadsheetBlob(
+        rows,
+        selectedAssets.map((asset) => asset.id),
+      );
+      downloadBlob(
+        xlsxBlob,
+        buildSoficoSpreadsheetFileName({
+          reportMetadata,
+          contractFields,
+          agreementDate,
+        }),
+      );
+      setStatusMessage("Planilha Sofico gerada com sucesso.");
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel gerar a planilha Sofico.",
       );
     }
   }
@@ -807,6 +857,7 @@ export function App() {
             onSaveCase={handleSaveCase}
             onExportPdf={handleExportPdf}
             onExportCalculationPdf={handleExportCalculationPdf}
+            onExportSoficoSpreadsheet={handleExportSoficoSpreadsheet}
             onSendForSignature={handleSendForSignature}
             signatureRequestPending={signatureRequestPending}
             onAgreementDateChange={handleAgreementDateChange}
@@ -1206,6 +1257,20 @@ function buildCalculationReportFileName({ reportMetadata, contractFields, agreem
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return `calculo-acordo-${label || "simulacao"}-${agreementDate || "data"}.pdf`;
+}
+
+function buildSoficoSpreadsheetFileName({ reportMetadata, contractFields, agreementDate }) {
+  const label = String(
+    contractFields?.unit || reportMetadata?.unit || reportMetadata?.owner || "acordo",
+  )
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `upload-acordos-sofico-${label || "acordo"}-${agreementDate || "data"}.xlsx`;
 }
 
 function downloadBlob(blob, filename) {

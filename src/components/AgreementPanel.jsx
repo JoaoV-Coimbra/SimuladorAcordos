@@ -21,6 +21,7 @@ export function AgreementPanel({
   onSaveCase,
   onExportPdf,
   onExportCalculationPdf,
+  onExportSoficoSpreadsheet,
   onSendForSignature,
   signatureRequestPending,
   onAgreementDateChange,
@@ -69,6 +70,14 @@ export function AgreementPanel({
               Gerar contrato PDF
             </button>
           )}
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={onExportSoficoSpreadsheet}
+            disabled={!simulation}
+          >
+            Gerar planilha Sofico
+          </button>
           <button
             type="button"
             className="button button--ghost"
