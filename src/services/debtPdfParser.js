@@ -116,7 +116,8 @@ function extractReportMetadata(lines, assetExtraction = { skippedLines: [] }) {
     || debtSubtotalToken
     || "";
 
-  metadata.unit = extractInlineMetadataValue(lines, "UNIDADE");
+  metadata.unit =
+    extractUnitIdMetadataValue(lines) || extractInlineMetadataValue(lines, "UNIDADE");
 
   return metadata;
 }
@@ -243,6 +244,26 @@ function parseBrazilianNumber(value) {
 
 function roundBrazilianCurrency(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+// Busca o identificador numerico da unidade, mesmo quando aparece junto de "UNIDADE".
+function extractUnitIdMetadataValue(lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const inlineMatch = line.match(/\bUNID_ID\s*:\s*([^\s,;]+)/i);
+    if (inlineMatch?.[1]) {
+      return inlineMatch[1].trim();
+    }
+
+    if (/\bUNID_ID\s*:\s*$/i.test(line)) {
+      const nextLine = lines[index + 1] ?? "";
+      if (nextLine.trim()) {
+        return nextLine.trim().split(/\s+/)[0];
+      }
+    }
+  }
+
+  return "";
 }
 
 // Busca valores simples no cabecalho, como "Unidade: UND77303" e "Proprietario : Nome".

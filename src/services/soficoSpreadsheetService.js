@@ -50,6 +50,11 @@ export function buildSoficoSpreadsheetRows({
 
 export function normalizeSoficoUnitId(value) {
   const rawValue = String(value || "").trim();
+  const explicitUnitIdMatch = rawValue.match(/\bUNID_ID\s*:\s*(\d+)/i);
+  if (explicitUnitIdMatch?.[1]) {
+    return Number.parseInt(explicitUnitIdMatch[1], 10);
+  }
+
   const digitsMatch = rawValue.match(/\d+/);
   if (!digitsMatch) {
     return rawValue;
