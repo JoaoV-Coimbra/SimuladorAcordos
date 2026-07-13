@@ -16,7 +16,7 @@ import { buildAgreementDocumentData } from "./lib/agreementDocument.js";
 import { calculateAgreement } from "./lib/agreementCalculator.js";
 import {
   buildSoficoSpreadsheetRows,
-  generateSoficoSpreadsheetBlob,
+  generateSoficoCsvBlob,
   normalizeSoficoUnitId,
 } from "./services/soficoSpreadsheetService.js";
 import {
@@ -400,7 +400,7 @@ export function App() {
       );
       if (!unitId) {
         setStatusMessage(
-          "Informe a unidade antes de gerar a planilha Sofico.",
+          "Informe a unidade antes de gerar o CSV Sofico.",
         );
         setDialogMode("pdf");
         setContractDialogOpen(true);
@@ -412,24 +412,24 @@ export function App() {
         agreementDate,
         simulation,
       });
-      const xlsxBlob = await generateSoficoSpreadsheetBlob(
+      const csvBlob = generateSoficoCsvBlob(
         rows,
         selectedAssets.map((asset) => asset.id),
       );
       downloadBlob(
-        xlsxBlob,
+        csvBlob,
         buildSoficoSpreadsheetFileName({
           reportMetadata,
           contractFields,
           agreementDate,
         }),
       );
-      setStatusMessage("Planilha Sofico gerada com sucesso.");
+      setStatusMessage("CSV Sofico gerado com sucesso.");
     } catch (error) {
       setStatusMessage(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel gerar a planilha Sofico.",
+          : "Nao foi possivel gerar o CSV Sofico.",
       );
     }
   }
@@ -1270,7 +1270,7 @@ function buildSoficoSpreadsheetFileName({ reportMetadata, contractFields, agreem
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  return `upload-acordos-sofico-${label || "acordo"}-${agreementDate || "data"}.xlsx`;
+  return `upload-acordos-sofico-${label || "acordo"}-${agreementDate || "data"}.csv`;
 }
 
 function downloadBlob(blob, filename) {
