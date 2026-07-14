@@ -232,11 +232,14 @@ export function App() {
       const { parseDebtSpreadsheetPdf } =
         await import("./services/debtPdfParser.js");
       const parsedReport = await parseDebtSpreadsheetPdf(file);
+      const normalizedReportMetadata = normalizeReportMetadataUnit(
+        parsedReport.metadata,
+      );
       setAssets(parsedReport.assets);
       setSelectedAssetIds(
         new Set(parsedReport.assets.map((asset) => asset.id)),
       );
-      setReportMetadata(parsedReport.metadata);
+      setReportMetadata(normalizedReportMetadata);
       setAttorneyFeesAmountInput(
         formatEditableMoney(parsedReport.metadata?.attorneyFeesAmount ?? 0),
       );
@@ -247,7 +250,7 @@ export function App() {
       setContractFields({
         address: "",
         email: "",
-        unit: parsedReport.metadata?.unit ?? ""
+        unit: normalizedReportMetadata?.unit ?? ""
       });
       setSignatureFields({
         nome: parsedReport.metadata?.owner ?? "",
@@ -1039,6 +1042,20 @@ export function App() {
 
 function isPdfFile(file) {
   return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+}
+
+function normalizeReportMetadataUnit(metadata) {
+  if (!metadata) {
+    return metadata;
+  }
+
+  const normalizedUnitId = normalizeSoficoUnitId(metadata.unit);
+  const unit = String(normalizedUnitId ?? "").trim() || metadata.unit;
+
+  return {
+    ...metadata,
+    unit
+  };
 }
 
 // Monta a identificacao visual da origem dos ativos carregados para contextualizar a semi-proposta.

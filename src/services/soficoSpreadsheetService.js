@@ -9,6 +9,8 @@ const COLUMN_HEADERS = [
   "PARCELA",
   "VENCIMENTO",
   "VLR_PARCELA",
+  "DT_RECEB",
+  "VLR_RECEB",
 ];
 
 export function generateSoficoCsvBlob(rows, assetIds = []) {
@@ -50,7 +52,7 @@ export function buildSoficoSpreadsheetRows({
 
 export function normalizeSoficoUnitId(value) {
   const rawValue = String(value || "").trim();
-  const explicitUnitIdMatch = rawValue.match(/\bUNID_ID\s*:\s*(\d+)/i);
+  const explicitUnitIdMatch = rawValue.match(/\bUNID_ID\s*:?\s*(\d+)/i);
   if (explicitUnitIdMatch?.[1]) {
     return Number.parseInt(explicitUnitIdMatch[1], 10);
   }
@@ -75,6 +77,8 @@ function buildDataCsvRow(row) {
     row.installmentNumber,
     formatCsvDate(row.dueDate),
     formatCsvNumber(row.installmentAmount, 2),
+    "",
+    "",
   ];
 }
 

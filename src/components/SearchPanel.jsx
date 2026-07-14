@@ -92,7 +92,7 @@ export function SearchPanel({
             <strong>{reportMetadata.ownerDocument || "-"}</strong>
           </div>
           <div>
-            <span>Unidade</span>
+            <span>UNID_ID</span>
             <strong>{reportMetadata.unit || "-"}</strong>
           </div>
           <div>
