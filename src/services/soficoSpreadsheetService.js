@@ -35,19 +35,44 @@ export function buildSoficoSpreadsheetRows({
     (installment) => installment.installmentNumber > 0,
   );
   const agreementType = simulation.installmentCount > 1 ? "Parcelado" : "Parcelado";
+  const hasDownPayment = simulation.downPayment > 0 && simulation.downPaymentEvent;
+  const totalPaymentCount = hasDownPayment
+    ? simulation.installmentCount + 1
+    : simulation.installmentCount;
+  const downPaymentRows = hasDownPayment
+    ? [
+        {
+          unitId,
+          agreementDate,
+          agreementType,
+          updatedAmount: simulation.totalDebt,
+          attorneyFeesAmount: simulation.attorneyFeesAmount,
+          totalAmount: simulation.correctedBalance,
+          installmentCount: totalPaymentCount,
+          installmentNumber: 1,
+          dueDate: simulation.downPaymentEvent.dueDate,
+          installmentAmount: simulation.downPayment,
+        },
+      ]
+    : [];
 
-  return installments.map((installment) => ({
-    unitId,
-    agreementDate,
-    agreementType,
-    updatedAmount: simulation.totalDebt,
-    attorneyFeesAmount: simulation.attorneyFeesAmount,
-    totalAmount: simulation.correctedBalance,
-    installmentCount: simulation.installmentCount,
-    installmentNumber: installment.installmentNumber,
-    dueDate: installment.dueDate,
-    installmentAmount: installment.installmentAmount,
-  }));
+  return [
+    ...downPaymentRows,
+    ...installments.map((installment) => ({
+      unitId,
+      agreementDate,
+      agreementType,
+      updatedAmount: simulation.totalDebt,
+      attorneyFeesAmount: simulation.attorneyFeesAmount,
+      totalAmount: simulation.correctedBalance,
+      installmentCount: totalPaymentCount,
+      installmentNumber: hasDownPayment
+        ? installment.installmentNumber + 1
+        : installment.installmentNumber,
+      dueDate: installment.dueDate,
+      installmentAmount: installment.installmentAmount,
+    })),
+  ];
 }
 
 export function normalizeSoficoUnitId(value) {
