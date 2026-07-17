@@ -1278,7 +1278,7 @@ function buildCalculationReportFileName({ reportMetadata, contractFields, agreem
 
 function buildSoficoSpreadsheetFileName({ reportMetadata, contractFields, agreementDate }) {
   const label = String(
-    contractFields?.unit || reportMetadata?.unit || reportMetadata?.owner || "acordo",
+    reportMetadata?.owner || contractFields?.unit || reportMetadata?.unit || "acordo",
   )
     .trim()
     .toLowerCase()
