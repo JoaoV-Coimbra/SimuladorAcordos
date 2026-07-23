@@ -45,9 +45,9 @@ export function buildSoficoSpreadsheetRows({
           unitId,
           agreementDate,
           agreementType,
-          updatedAmount: simulation.totalDebt,
+          updatedAmount: simulation.correctedBalance,
           attorneyFeesAmount: simulation.attorneyFeesAmount,
-          totalAmount: simulation.correctedBalance,
+          totalAmount: simulation.totalPaid,
           installmentCount: totalPaymentCount,
           installmentNumber: 1,
           dueDate: simulation.downPaymentEvent.dueDate,
@@ -62,9 +62,9 @@ export function buildSoficoSpreadsheetRows({
       unitId,
       agreementDate,
       agreementType,
-      updatedAmount: simulation.totalDebt,
+      updatedAmount: simulation.correctedBalance,
       attorneyFeesAmount: simulation.attorneyFeesAmount,
-      totalAmount: simulation.correctedBalance,
+      totalAmount: simulation.totalPaid,
       installmentCount: totalPaymentCount,
       installmentNumber: hasDownPayment
         ? installment.installmentNumber + 1
