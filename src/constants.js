@@ -6,3 +6,5 @@ export const DEFAULT_ATTORNEY_FEES_AMOUNT = 0;
 export const DEFAULT_INSTALLMENTS = 15;
 // Intervalo minimo em dias uteis exigido para o vencimento da primeira parcela.
 export const MINIMUM_FIRST_INSTALLMENT_BUSINESS_DAYS = 2;
+// Tarifa fixa de processamento de boleto exibida no acordo.
+export const DEFAULT_BANK_TARIFF_AMOUNT = 5.5;

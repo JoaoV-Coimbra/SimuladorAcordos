@@ -4,7 +4,6 @@ const CREDITOR_NAME =
   "G5 CR\u00c9DITOS CONDOMINIAIS FUNDO DE INVESTIMENTO EM DIREITOS CREDIT\u00d3RIOS N\u00c3O-PADRONIZADOS";
 const CREDITOR_DOCUMENT = "32.948.668/0001-51";
 const DEFAULT_SIGNATURE_CITY = "Rio de Janeiro";
-const DEFAULT_BANK_TARIFF = "R$ 5,50";
 const DEFAULT_FOOTER_ADDRESS =
   "Av. Borges de Medeiros, n\u00ba 633, Sala 706, Leblon, Rio de Janeiro/RJ, 22430-041";
 const DEFAULT_FOOTER_PHONE = "(55 21) 3205-9180";
@@ -15,7 +14,9 @@ export function buildAgreementDocumentData({
   reportMetadata,
   selectedAssets,
   simulation,
-  contractFields
+  contractFields,
+  bankTariffAmount = 5.5,
+  isBankTariffWaived = false,
 }) {
   const debtPeriod = buildDebtPeriodLabel(selectedAssets);
   const debtorDocument = normalizeDocument(reportMetadata?.ownerDocument);
@@ -44,7 +45,8 @@ export function buildAgreementDocumentData({
     firstInstallmentDate: formatDate(simulation?.firstInstallmentDate),
     signatureDate: formatDateLong(agreementDate),
     signatureCity: DEFAULT_SIGNATURE_CITY,
-    bankTariffAmount: DEFAULT_BANK_TARIFF,
+    bankTariffAmount: formatCurrency(bankTariffAmount),
+    isBankTariffWaived,
     footerAddress: DEFAULT_FOOTER_ADDRESS,
     footerPhone: DEFAULT_FOOTER_PHONE
   };

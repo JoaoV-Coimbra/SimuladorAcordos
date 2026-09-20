@@ -15,6 +15,8 @@ export function AgreementPanel({
   hasDownPayment,
   downPaymentAmount,
   downPaymentDate,
+  bankTariffAmount,
+  isBankTariffWaived,
   selectedAssets,
   simulation,
   searchDescription,
@@ -39,6 +41,7 @@ export function AgreementPanel({
   onDownPaymentAmountChange,
   onDownPaymentBlur,
   onDownPaymentDateChange,
+  onBankTariffWaivedChange,
   onNoteChange,
 }) {
   // O painel recebe tudo ja calculado pelo App e apenas renderiza/propaga edicoes.
@@ -233,6 +236,26 @@ export function AgreementPanel({
             </>
           )}
 
+          <div className="field field--segmented">
+            <span>Tarifa de boleto</span>
+            <div className="segmented-control" role="group" aria-label="Tarifa de boleto">
+              <button
+                type="button"
+                className={`segment-button ${!isBankTariffWaived ? "is-active" : ""}`}
+                onClick={() => onBankTariffWaivedChange(false)}
+              >
+                Cobrar
+              </button>
+              <button
+                type="button"
+                className={`segment-button ${isBankTariffWaived ? "is-active" : ""}`}
+                onClick={() => onBankTariffWaivedChange(true)}
+              >
+                Isentar
+              </button>
+            </div>
+          </div>
+
           <label className="field">
             <span>Observação comercial</span>
             <input
@@ -283,6 +306,10 @@ export function AgreementPanel({
             <ResultCard label="Saldo parcelado" value={formatCurrency(simulation.financedBalance)} />
             <ResultCard label="Parcela (Price)" value={formatCurrency(simulation.installmentAmount)} />
             <ResultCard label="Taxa a.m." value={`${formatPercent(simulation.monthlyRatePercent)}%`} />
+            <ResultCard
+              label="Tarifa processamento de boleto"
+              value={isBankTariffWaived ? "Isenta" : formatCurrency(bankTariffAmount)}
+            />
           </div>
 
           <div className="proposal__overview">

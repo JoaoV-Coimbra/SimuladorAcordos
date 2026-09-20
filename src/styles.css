@@ -825,6 +825,7 @@ tbody tr.selected {
 
 .result-card span {
   display: block;
+  overflow-wrap: anywhere;
 }
 
 .result-card strong {
@@ -1347,9 +1348,11 @@ tbody tr.selected {
 
 .calculation-report__table--schedule th,
 .calculation-report__table--schedule td {
+  padding-right: 3px;
+  padding-left: 3px;
   padding-top: 2px;
   padding-bottom: 2px;
-  font-size: 7.5px;
+  font-size: 7px;
 }
 
 .calculation-report__footer {

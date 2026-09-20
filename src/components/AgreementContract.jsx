@@ -47,8 +47,10 @@ export function AgreementContract({ documentData }) {
               <li>
                 O pagamento das parcelas será realizado por meio de boletos bancários, a serem
                 mensalmente enviados pelo setor financeiro do CREDOR ao endereço de e-mail:{" "}
-                {documentData.debtorEmail} e serão acrescidos da tarifa bancária de registro e
-                processamento no valor de {documentData.bankTariffAmount}.
+                {documentData.debtorEmail}
+                {documentData.isBankTariffWaived
+                  ? ", com isenção da tarifa bancária de registro e processamento."
+                  : ` e serão acrescidos da tarifa bancária de registro e processamento no valor de ${documentData.bankTariffAmount}.`}
               </li>
 
               <li>

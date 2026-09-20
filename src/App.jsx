@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import html2pdf from "html2pdf.js";
 import {
+  DEFAULT_BANK_TARIFF_AMOUNT,
   DEFAULT_ATTORNEY_FEES_AMOUNT,
   DEFAULT_INSTALLMENTS,
   DEFAULT_MONTHLY_RATE_PERCENT,
@@ -68,6 +69,7 @@ export function App() {
   const [hasDownPayment, setHasDownPayment] = useState(false);
   const [downPaymentAmount, setDownPaymentAmount] = useState(formatEditableMoney(0));
   const [downPaymentDate, setDownPaymentDate] = useState(minimumFirstInstallmentDate);
+  const [isBankTariffWaived, setIsBankTariffWaived] = useState(false);
   const [note, setNote] = useState("");
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [contractFields, setContractFields] = useState({
@@ -155,7 +157,9 @@ export function App() {
         reportMetadata,
         selectedAssets,
         simulation,
-        contractFields
+        contractFields,
+        bankTariffAmount: DEFAULT_BANK_TARIFF_AMOUNT,
+        isBankTariffWaived
       })
     : null;
 
@@ -260,6 +264,7 @@ export function App() {
       });
       setHasDownPayment(false);
       setDownPaymentAmount(formatEditableMoney(0));
+      setIsBankTariffWaived(false);
       setStatusMessage(
         parsedReport.assets.length
           ? buildSuccessMessage(parsedReport)
@@ -283,6 +288,7 @@ export function App() {
         telefone: "",
         mensagem: "Assine este acordo, por favor."
       });
+      setIsBankTariffWaived(false);
       setStatusMessage(
         "Não foi possível ler este PDF. Verifique se ele segue o modelo da planilha débito.",
       );
@@ -660,6 +666,7 @@ export function App() {
       hasDownPayment,
       downPaymentAmount,
       downPaymentDate,
+      isBankTariffWaived,
       note,
       contractFields,
       signatureFields
@@ -709,6 +716,7 @@ export function App() {
       setHasDownPayment,
       setDownPaymentAmount,
       setDownPaymentDate,
+      setIsBankTariffWaived,
       setNote,
       setContractFields,
       setSignatureFields
@@ -854,6 +862,8 @@ export function App() {
             hasDownPayment={hasDownPayment}
             downPaymentAmount={downPaymentAmount}
             downPaymentDate={normalizedDownPaymentDate}
+            bankTariffAmount={DEFAULT_BANK_TARIFF_AMOUNT}
+            isBankTariffWaived={isBankTariffWaived}
             selectedAssets={selectedAssets}
             simulation={simulation}
             searchDescription={searchDescription}
@@ -884,6 +894,7 @@ export function App() {
             onDownPaymentAmountChange={handleDownPaymentAmountChange}
             onDownPaymentBlur={handleDownPaymentBlur}
             onDownPaymentDateChange={handleDownPaymentDateChange}
+            onBankTariffWaivedChange={setIsBankTariffWaived}
             onNoteChange={setNote}
           />
           </div>
@@ -1034,6 +1045,8 @@ export function App() {
         selectedAssets={selectedAssets}
         searchDescription={searchDescription}
         agreementMode={agreementMode}
+        bankTariffAmount={DEFAULT_BANK_TARIFF_AMOUNT}
+        isBankTariffWaived={isBankTariffWaived}
         note={note}
       />
     </>
@@ -1361,6 +1374,7 @@ function createCaseSnapshot(state) {
     hasDownPayment: state.hasDownPayment,
     downPaymentAmount: state.downPaymentAmount,
     downPaymentDate: state.downPaymentDate,
+    isBankTariffWaived: state.isBankTariffWaived,
     note: state.note,
     contractFields: state.contractFields,
     signatureFields: state.signatureFields
@@ -1387,6 +1401,7 @@ function restoreCaseSnapshot(snapshot, setters) {
   setters.setHasDownPayment(Boolean(snapshot.hasDownPayment));
   setters.setDownPaymentAmount(snapshot.downPaymentAmount || formatEditableMoney(0));
   setters.setDownPaymentDate(snapshot.downPaymentDate || snapshot.agreementDate || "");
+  setters.setIsBankTariffWaived(Boolean(snapshot.isBankTariffWaived));
   setters.setNote(snapshot.note || "");
   setters.setContractFields(snapshot.contractFields || { address: "", email: "", unit: "" });
   setters.setSignatureFields(

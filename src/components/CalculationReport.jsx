@@ -6,6 +6,8 @@ export function CalculationReport({
   selectedAssets,
   searchDescription,
   agreementMode,
+  bankTariffAmount = 0,
+  isBankTariffWaived = false,
   note,
 }) {
   if (!simulation) {
@@ -16,6 +18,7 @@ export function CalculationReport({
   const activeSchedule = simulation.schedule.filter(
     (installment) => installment.installmentNumber > 0,
   );
+  const visualBankTariffAmount = isBankTariffWaived ? 0 : bankTariffAmount;
   const calculationRows = [
     ["Dívida original", formatCurrency(simulation.baseDebt)],
     ["Custas", formatCurrency(simulation.legalCostsAmount)],
@@ -116,7 +119,7 @@ export function CalculationReport({
         <section className="calculation-report__section calculation-report__section--schedule">
           <div className="calculation-report__section-title">
             <h2>Cronograma de parcelas</h2>
-            <p>Valores mensais do acordo.</p>
+            <p>Parcela financeira separada da tarifa de processamento do boleto.</p>
           </div>
           <div className="calculation-report__table-wrap">
             <table className="calculation-report__table calculation-report__table--schedule">
@@ -127,6 +130,8 @@ export function CalculationReport({
                   <th>Juros</th>
                   <th>Amortização</th>
                   <th>Parcela</th>
+                  <th>Tarifa Processamento</th>
+                  <th>Total boleto</th>
                   <th>Saldo final</th>
                 </tr>
               </thead>
@@ -138,6 +143,10 @@ export function CalculationReport({
                     <td>{formatCurrency(installment.interest)}</td>
                     <td>{formatCurrency(installment.amortization)}</td>
                     <td>{formatCurrency(installment.installmentAmount)}</td>
+                    <td>{formatCurrency(visualBankTariffAmount)}</td>
+                    <td>
+                      {formatCurrency(installment.installmentAmount + visualBankTariffAmount)}
+                    </td>
                     <td>{formatCurrency(installment.remainingBalance)}</td>
                   </tr>
                 ))}
